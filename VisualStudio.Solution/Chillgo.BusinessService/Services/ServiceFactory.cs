@@ -1,4 +1,4 @@
-﻿using Chillgo.BusinessService.Interfaces;
+using Chillgo.BusinessService.Interfaces;
 using Chillgo.Repository.Interfaces;
 using FluentEmail.Core;
 using Microsoft.Extensions.Configuration;
@@ -15,7 +15,7 @@ namespace Chillgo.BusinessService.Services
             IFluentEmailFactory fluentEmailFactory,
             IRazorTemplateEngine razorTemplateEngine)
         {
-            _accountService = new Lazy<IAccountService>(() => new AccountService(unitOfWork, this));
+            _accountService = new Lazy<IAccountService>(() => new AccountService(unitOfWork));
         }
 
     public IAccountService GetAccountService()

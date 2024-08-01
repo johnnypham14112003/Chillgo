@@ -1,6 +1,7 @@
-﻿using Chillgo.Repository.Interfaces;
+using Chillgo.Repository.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 namespace Chillgo.Repository.Repositories
 {
@@ -40,17 +41,16 @@ namespace Chillgo.Repository.Repositories
             return await _context.Set<T>().FindAsync(id);
         }
 
-        public Task<T> AddAsync(T TEntity)
+        public Task AddAsync(T TEntity)
         {
             _context.Add(TEntity);
-            return Task.FromResult(TEntity);
+            return Task.CompletedTask;
         }
 
         public async Task AddRangeAsync(IEnumerable<T> Tentities)
         {
             await _context.Set<T>().AddRangeAsync(Tentities);
         }
-
 
         public Task UpdateAsync(T TEntity)
         {
@@ -68,6 +68,11 @@ namespace Chillgo.Repository.Repositories
         {
             _context.Set<T>().RemoveRange(TEntities);
             return Task.CompletedTask;
+        }
+
+        public async Task<bool> SaveChangeAsync()
+        {
+            return await _context.SaveChangesAsync() > 0;
         }
     }
 }
