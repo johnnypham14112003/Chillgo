@@ -1,4 +1,4 @@
-﻿using Chillgo.BusinessService.BusinessModels;
+using Chillgo.BusinessService.BusinessModels;
 
 namespace Chillgo.BusinessService.Interfaces
 {

@@ -1,4 +1,4 @@
-﻿using Chillgo.BusinessService.Interfaces;
+using Chillgo.BusinessService.Interfaces;
 using Chillgo.Repository.Interfaces;
 using FluentEmail.Core;
 using Microsoft.Extensions.Configuration;

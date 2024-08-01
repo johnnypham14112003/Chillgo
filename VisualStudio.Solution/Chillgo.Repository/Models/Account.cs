@@ -1,4 +1,4 @@
-﻿namespace Chillgo.Repository.Models;
+namespace Chillgo.Repository.Models;
 
 public partial class Account
 {

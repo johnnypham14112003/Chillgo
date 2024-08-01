@@ -1,7 +1,6 @@
-﻿using Chillgo.Api.Models.Request;
+using Chillgo.Api.Models.Request;
 using Chillgo.BusinessService.BusinessModels;
 using Chillgo.BusinessService.Interfaces;
-using Chillgo.Repository.Models;
 using Mapster;
 using Microsoft.AspNetCore.Mvc;
 

@@ -1,4 +1,4 @@
-﻿using Chillgo.BusinessService.Interfaces;
+using Chillgo.BusinessService.Interfaces;
 using Chillgo.BusinessService.Services;
 using Chillgo.Repository;
 using Chillgo.Repository.Interfaces;

@@ -1,4 +1,4 @@
-﻿using Chillgo.Repository.Interfaces;
+using Chillgo.Repository.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using System.Threading.Tasks;

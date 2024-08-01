@@ -1,4 +1,4 @@
-﻿using Chillgo.BusinessService.BusinessModels;
+using Chillgo.BusinessService.BusinessModels;
 using Chillgo.BusinessService.Extensions.Exceptions;
 using Chillgo.BusinessService.Interfaces;
 using Chillgo.Repository.Interfaces;

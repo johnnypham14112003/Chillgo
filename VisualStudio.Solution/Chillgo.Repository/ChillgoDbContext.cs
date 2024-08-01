@@ -1,4 +1,4 @@
-﻿using Chillgo.Repository.Models;
+using Chillgo.Repository.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Chillgo.Repository;
