@@ -15,7 +15,7 @@ namespace Chillgo.BusinessService.Services
             IFluentEmailFactory fluentEmailFactory,
             IRazorTemplateEngine razorTemplateEngine)
         {
-            _accountService = new Lazy<IAccountService>(() => new AccountService(unitOfWork, this));
+            _accountService = new Lazy<IAccountService>(() => new AccountService(unitOfWork));
         }
 
     public IAccountService GetAccountService()

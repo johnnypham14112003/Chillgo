@@ -15,7 +15,7 @@ namespace Chillgo.Repository.Interfaces
 
         Task<T?> GetByIdAsync(Guid id);
 
-        Task<T> AddAsync(T TEntity);
+        Task AddAsync(T TEntity);
 
         Task AddRangeAsync(IEnumerable<T> Tentities);
 
@@ -24,5 +24,7 @@ namespace Chillgo.Repository.Interfaces
         Task DeleteAsync(T TEntity);
 
         Task DeleteRangeAsync(IEnumerable<T> TEntities);
+
+        Task<bool> SaveChangeAsync();
     }
 }

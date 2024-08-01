@@ -1,9 +1,10 @@
-﻿using Chillgo.Repository.Models;
+﻿using Chillgo.BusinessService.BusinessModels;
 
 namespace Chillgo.BusinessService.Interfaces
 {
     public interface IAccountService
     {
-        Task<Account?> GetAccountsById(Guid id);
+        Task<bool> CreateAccountAsync(BM_Account newAccount);
+        Task<int> CountAccount();
     }
 }
