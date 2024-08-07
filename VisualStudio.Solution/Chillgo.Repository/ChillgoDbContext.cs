@@ -1,4 +1,4 @@
-using Chillgo.Repository.Models;
+﻿using Chillgo.Repository.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Chillgo.Repository;
@@ -64,11 +64,15 @@ public partial class ChillgoDbContext : DbContext
 
     public virtual DbSet<Voucher> Vouchers { get; set; }
 
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseSqlServer("Server=DESKTOP-UUSBGM6\\SQLSERVER1;database=ChillgoDB;uid=sa;pwd=12345;TrustServerCertificate=True;");
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Account>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Account__3214EC0774882560");
+            entity.HasKey(e => e.Id).HasName("PK__Account__3214EC0777DB94D0");
 
             entity.ToTable("Account");
 
@@ -80,7 +84,7 @@ public partial class ChillgoDbContext : DbContext
 
             entity.HasIndex(e => e.Status, "Idx_Account_Status");
 
-            entity.HasIndex(e => e.Email, "UQ__Account__A9D10534DE796920").IsUnique();
+            entity.HasIndex(e => e.Email, "UQ__Account__A9D10534F2AB258C").IsUnique();
 
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
             entity.Property(e => e.Cccd)
@@ -119,7 +123,7 @@ public partial class ChillgoDbContext : DbContext
                         .HasConstraintName("FK__Favorited__Accou__236943A5"),
                     j =>
                     {
-                        j.HasKey("AccountId", "HotelId").HasName("PK__Favorite__D0FD861BA53B837A");
+                        j.HasKey("AccountId", "HotelId").HasName("PK__Favorite__D0FD861B9DF21605");
                         j.ToTable("FavoritedHotel");
                         j.HasIndex(new[] { "AccountId" }, "Idx_FavoritedHotel_AccountId");
                     });
@@ -137,7 +141,7 @@ public partial class ChillgoDbContext : DbContext
                         .HasConstraintName("FK__Favorited__Accou__1AD3FDA4"),
                     j =>
                     {
-                        j.HasKey("AccountId", "LocationId").HasName("PK__Favorite__5AE24FEFE90B2F99");
+                        j.HasKey("AccountId", "LocationId").HasName("PK__Favorite__5AE24FEFAFEE226A");
                         j.ToTable("FavoritedLocation");
                         j.HasIndex(new[] { "AccountId" }, "Idx_FavoritedLocation_AccountId");
                     });
@@ -155,7 +159,7 @@ public partial class ChillgoDbContext : DbContext
                         .HasConstraintName("FK__Favorited__Accou__2739D489"),
                     j =>
                     {
-                        j.HasKey("AccountId", "TransportId").HasName("PK__Favorite__F5033FB7F2BF9E1A");
+                        j.HasKey("AccountId", "TransportId").HasName("PK__Favorite__F5033FB7FF38059D");
                         j.ToTable("FavoritedTransport");
                         j.HasIndex(new[] { "AccountId" }, "Idx_FavoritedTransport_AccountId");
                     });
@@ -163,7 +167,7 @@ public partial class ChillgoDbContext : DbContext
 
         modelBuilder.Entity<Blog>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Blog__3214EC07521FD385");
+            entity.HasKey(e => e.Id).HasName("PK__Blog__3214EC070F78D921");
 
             entity.ToTable("Blog");
 
@@ -189,7 +193,7 @@ public partial class ChillgoDbContext : DbContext
 
         modelBuilder.Entity<Booking>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Booking__3214EC0704E3724B");
+            entity.HasKey(e => e.Id).HasName("PK__Booking__3214EC07998A5551");
 
             entity.ToTable("Booking");
 
@@ -220,7 +224,7 @@ public partial class ChillgoDbContext : DbContext
 
         modelBuilder.Entity<BookingDetail>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__BookingD__3214EC07F904E101");
+            entity.HasKey(e => e.Id).HasName("PK__BookingD__3214EC072F51946E");
 
             entity.ToTable("BookingDetail");
 
@@ -275,7 +279,7 @@ public partial class ChillgoDbContext : DbContext
 
         modelBuilder.Entity<BotAi>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__BotAI__3214EC07C48A58AB");
+            entity.HasKey(e => e.Id).HasName("PK__BotAI__3214EC072925B359");
 
             entity.ToTable("BotAI");
 
@@ -297,7 +301,7 @@ public partial class ChillgoDbContext : DbContext
 
         modelBuilder.Entity<ChillCoinTask>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__ChillCoi__3214EC07BC2B816A");
+            entity.HasKey(e => e.Id).HasName("PK__ChillCoi__3214EC074AFA3B4C");
 
             entity.ToTable("ChillCoinTask");
 
@@ -312,7 +316,7 @@ public partial class ChillgoDbContext : DbContext
 
         modelBuilder.Entity<Comment>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Comment__3214EC074C55919A");
+            entity.HasKey(e => e.Id).HasName("PK__Comment__3214EC0709731265");
 
             entity.ToTable("Comment");
 
@@ -356,7 +360,7 @@ public partial class ChillgoDbContext : DbContext
 
         modelBuilder.Entity<Conversation>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Conversa__3214EC07FDD3674D");
+            entity.HasKey(e => e.Id).HasName("PK__Conversa__3214EC0702D83615");
 
             entity.ToTable("Conversation");
 
@@ -378,7 +382,7 @@ public partial class ChillgoDbContext : DbContext
             entity.Property(e => e.SecondName).HasMaxLength(50);
             entity.Property(e => e.Status)
                 .HasMaxLength(30)
-                .HasDefaultValue("Đã Chuyển Trả");
+                .HasDefaultValue("Chờ Xác Nhận");
 
             entity.HasOne(d => d.Aibot).WithMany(p => p.Conversations)
                 .HasForeignKey(d => d.AibotId)
@@ -395,7 +399,7 @@ public partial class ChillgoDbContext : DbContext
 
         modelBuilder.Entity<CustomerChillCoinTask>(entity =>
         {
-            entity.HasKey(e => new { e.AccountId, e.ChillCoinTaskId }).HasName("PK__Customer__B9BEB747BEE8B4AE");
+            entity.HasKey(e => new { e.AccountId, e.ChillCoinTaskId }).HasName("PK__Customer__B9BEB74795715BB7");
 
             entity.ToTable("CustomerChillCoinTask");
 
@@ -418,7 +422,7 @@ public partial class ChillgoDbContext : DbContext
 
         modelBuilder.Entity<CustomerVoucher>(entity =>
         {
-            entity.HasKey(e => new { e.VoucherId, e.AccountId }).HasName("PK__Customer__49A7A37BA9559195");
+            entity.HasKey(e => new { e.VoucherId, e.AccountId }).HasName("PK__Customer__49A7A37B3A51FDCA");
 
             entity.ToTable("CustomerVoucher");
 
@@ -444,7 +448,7 @@ public partial class ChillgoDbContext : DbContext
 
         modelBuilder.Entity<FavoritedPerson>(entity =>
         {
-            entity.HasKey(e => new { e.AccountId, e.PersonId }).HasName("PK__Favorite__7E3F5A183F41A189");
+            entity.HasKey(e => new { e.AccountId, e.PersonId }).HasName("PK__Favorite__7E3F5A18B341690B");
 
             entity.ToTable("FavoritedPerson");
 
@@ -463,11 +467,11 @@ public partial class ChillgoDbContext : DbContext
 
         modelBuilder.Entity<Hobby>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Hobby__3214EC072B7D810F");
+            entity.HasKey(e => e.Id).HasName("PK__Hobby__3214EC070FE2E9AE");
 
             entity.ToTable("Hobby");
 
-            entity.HasIndex(e => e.Name, "UQ__Hobby__737584F69B7140FD").IsUnique();
+            entity.HasIndex(e => e.Name, "UQ__Hobby__737584F675FF0656").IsUnique();
 
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
             entity.Property(e => e.Name).HasMaxLength(100);
@@ -485,7 +489,7 @@ public partial class ChillgoDbContext : DbContext
                         .HasConstraintName("FK__HobbyCust__Hobby__4E88ABD4"),
                     j =>
                     {
-                        j.HasKey("HobbyId", "AccountId").HasName("PK__HobbyCus__79F7D1955284F027");
+                        j.HasKey("HobbyId", "AccountId").HasName("PK__HobbyCus__79F7D195FEDE993B");
                         j.ToTable("HobbyCustomer");
                         j.HasIndex(new[] { "AccountId" }, "Idx_HobbyCustomer_AccountId");
                     });
@@ -493,7 +497,7 @@ public partial class ChillgoDbContext : DbContext
 
         modelBuilder.Entity<Hotel>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Hotel__3214EC07694C5900");
+            entity.HasKey(e => e.Id).HasName("PK__Hotel__3214EC07D27EAD32");
 
             entity.ToTable("Hotel");
 
@@ -517,7 +521,7 @@ public partial class ChillgoDbContext : DbContext
 
         modelBuilder.Entity<HotelRoom>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__HotelRoo__3214EC0732844DCD");
+            entity.HasKey(e => e.Id).HasName("PK__HotelRoo__3214EC07A33278C2");
 
             entity.ToTable("HotelRoom");
 
@@ -546,7 +550,7 @@ public partial class ChillgoDbContext : DbContext
 
         modelBuilder.Entity<Image>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Image__3214EC070315FFFA");
+            entity.HasKey(e => e.Id).HasName("PK__Image__3214EC076D1EB82C");
 
             entity.ToTable("Image");
 
@@ -599,7 +603,7 @@ public partial class ChillgoDbContext : DbContext
 
         modelBuilder.Entity<Location>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Location__3214EC0757220C1A");
+            entity.HasKey(e => e.Id).HasName("PK__Location__3214EC07175B9065");
 
             entity.ToTable("Location");
 
@@ -630,7 +634,7 @@ public partial class ChillgoDbContext : DbContext
 
         modelBuilder.Entity<Message>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Message__3214EC07513A45D4");
+            entity.HasKey(e => e.Id).HasName("PK__Message__3214EC07EE4D29B3");
 
             entity.ToTable("Message");
 
@@ -664,13 +668,13 @@ public partial class ChillgoDbContext : DbContext
 
         modelBuilder.Entity<Package>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Package__3214EC07E417B162");
+            entity.HasKey(e => e.Id).HasName("PK__Package__3214EC0797A6ED1C");
 
             entity.ToTable("Package");
 
             entity.HasIndex(e => e.Status, "Idx_Package_Status");
 
-            entity.HasIndex(e => e.Code, "UQ__Package__A25C5AA731684593").IsUnique();
+            entity.HasIndex(e => e.Code, "UQ__Package__A25C5AA7BE171089").IsUnique();
 
             entity.Property(e => e.Id).HasDefaultValueSql("(newid())");
             entity.Property(e => e.Code).HasMaxLength(20);
@@ -683,7 +687,7 @@ public partial class ChillgoDbContext : DbContext
 
         modelBuilder.Entity<PackageTransaction>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__PackageT__3214EC07A13C1F80");
+            entity.HasKey(e => e.Id).HasName("PK__PackageT__3214EC07ED07195E");
 
             entity.ToTable("PackageTransaction");
 
@@ -722,7 +726,7 @@ public partial class ChillgoDbContext : DbContext
 
         modelBuilder.Entity<Plan>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Plan__3214EC071E36A46F");
+            entity.HasKey(e => e.Id).HasName("PK__Plan__3214EC0774A2365C");
 
             entity.ToTable("Plan");
 
@@ -750,7 +754,7 @@ public partial class ChillgoDbContext : DbContext
 
         modelBuilder.Entity<SalaryTransaction>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__SalaryTr__3214EC07CF363228");
+            entity.HasKey(e => e.Id).HasName("PK__SalaryTr__3214EC075B5466F3");
 
             entity.ToTable("SalaryTransaction");
 
@@ -782,7 +786,7 @@ public partial class ChillgoDbContext : DbContext
 
         modelBuilder.Entity<Schedule>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Schedule__3214EC07F008D755");
+            entity.HasKey(e => e.Id).HasName("PK__Schedule__3214EC07063DD3E7");
 
             entity.ToTable("Schedule");
 
@@ -814,7 +818,7 @@ public partial class ChillgoDbContext : DbContext
 
         modelBuilder.Entity<Transport>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Transpor__3214EC0793B57B7B");
+            entity.HasKey(e => e.Id).HasName("PK__Transpor__3214EC0775DB14B4");
 
             entity.ToTable("Transport");
 
@@ -839,7 +843,7 @@ public partial class ChillgoDbContext : DbContext
 
         modelBuilder.Entity<VerificationRequest>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Verifica__3214EC07214C4E1D");
+            entity.HasKey(e => e.Id).HasName("PK__Verifica__3214EC07B196C518");
 
             entity.ToTable("VerificationRequest");
 
@@ -869,7 +873,7 @@ public partial class ChillgoDbContext : DbContext
 
         modelBuilder.Entity<Voucher>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Voucher__3214EC0701ABF6FC");
+            entity.HasKey(e => e.Id).HasName("PK__Voucher__3214EC0709EDF0E6");
 
             entity.ToTable("Voucher");
 

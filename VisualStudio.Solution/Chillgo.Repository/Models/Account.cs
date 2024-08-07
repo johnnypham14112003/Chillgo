@@ -1,8 +1,10 @@
-namespace Chillgo.Repository.Models;
+﻿namespace Chillgo.Repository.Models;
 
 public partial class Account
 {
     public Guid Id { get; set; }
+
+    public string FirebaseUid { get; set; } = null!;
 
     public string Email { get; set; } = null!;
 
@@ -25,6 +27,12 @@ public partial class Account
     public DateTime LastUpdated { get; set; }
 
     public int ChillCoin { get; set; }
+
+    public string? FcmToken { get; set; }
+
+    public string? GoogleId { get; set; }
+
+    public string? FacebookId { get; set; }
 
     public string? Expertise { get; set; }
 

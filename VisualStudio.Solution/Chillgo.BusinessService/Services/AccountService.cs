@@ -6,6 +6,7 @@ using Chillgo.Repository.Models;
 using Mapster;
 using System.Security.Cryptography;
 using System.Text;
+using FirebaseAdmin.Auth;
 
 namespace Chillgo.BusinessService.Services
 {
@@ -18,27 +19,43 @@ namespace Chillgo.BusinessService.Services
             _unitOfWork = unitOfWork;
         }
         //=============================================================================
-        public async Task<bool> CreateAccountAsync(BM_Account newAccount)
+        public async Task<bool> CreateAccountAsync(BM_Account AccountFromService)
         {
             try
             {
-                var existAcc = await _unitOfWork.GetAccountRepository().GetOneAsync(acc => acc.Email.ToLower().Equals(newAccount.Email.ToLower()), false);
+                var existAcc = await _unitOfWork.GetAccountRepository().GetOneAsync(acc => acc.Email.ToLower().Equals(AccountFromService.Email.ToLower()), false);
                 if (existAcc is not null)
                 {
                     throw new ConflictException("Tài khoản Email này đã tồn tại trong hệ thống");
                 }
-                string securedPassword = HashStringSHA256(newAccount.Password);
-                newAccount.Password = securedPassword;
+                string securedPassword = HashStringSHA256(AccountFromService.Password);
+                AccountFromService.Password = securedPassword;
 
-                Account RepoAcc = new Account();
-                await _unitOfWork.GetAccountRepository().AddAsync(newAccount.Adapt(RepoAcc));
-                return await _unitOfWork.GetAccountRepository().SaveChangeAsync();
+                //Create instance of DB model
+                Account AccountInDb = new Account();
+
+                //Map data of 'AccountFromService' to 'AccountInDb'
+                AccountFromService.Adapt(AccountInDb);
+
+                //Create and get FirebaseUid
+                AccountInDb.FirebaseUid = await FirebaseRegisterAccount(AccountFromService); ;
+
+                //Save to DB
+                await _unitOfWork.GetAccountRepository().AddAsync(AccountInDb);
+                bool saveRusult = await _unitOfWork.GetAccountRepository().SaveChangeAsync();
+
+                //Rollback Firebase user creation if save in DB failed!
+                if (saveRusult == false) await FirebaseAuth.DefaultInstance.DeleteUserAsync(AccountInDb.FirebaseUid);
+
+                return saveRusult;
             }
             catch (Exception ex)
             {
-                throw new BadRequestException("Đã có lỗi ở hàm CreateAccountAsync: " + ex);
+                throw new BadRequestException("Đã có lỗi ở hàm CreateAccountAsync: " + ex.Message);
             }
         }
+
+
         public async Task<int> CountAccount()
         {
             return await _unitOfWork.GetAccountRepository().CountAsync(acc => true);
@@ -67,6 +84,28 @@ namespace Chillgo.BusinessService.Services
             if (status.ToLower().Equals("Bị Cấm".ToLower()))
             {
                 throw new BadRequestException("Tài khoản Email này đã bị cấm truy vào hệ thống.");
+            }
+        }
+        private async Task<string> FirebaseRegisterAccount(BM_Account newAccount)
+        {
+            try
+            {
+                UserRecordArgs firebaseUser = new UserRecordArgs
+                {
+                    Email = newAccount.Email,
+                    Password = newAccount.Password,
+                    DisplayName = newAccount.FullName
+                };
+
+                UserRecord userRecord = await FirebaseAuth.DefaultInstance.CreateUserAsync(firebaseUser);
+
+                //string customToken = await FirebaseAuth.DefaultInstance.CreateCustomTokenAsync(userRecord.Uid);
+
+                return userRecord.Uid;
+            }
+            catch (FirebaseAuthException firebaseEx)
+            {
+                throw new BadRequestException("Đã có lỗi ở hàm FirebaseRegisterAccount: " + firebaseEx.Message);
             }
         }
     }

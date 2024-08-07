@@ -2,17 +2,21 @@ using Chillgo.BusinessService.Interfaces;
 using Chillgo.BusinessService.Services;
 using Chillgo.Repository;
 using Chillgo.Repository.Interfaces;
-using Chillgo.Repository.Models;
 using Chillgo.Repository.Repositories;
+using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
 using Mapster;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text.Json;
 
 
 namespace Chillgo.Api
 {
     public static class ServiceRegistration
     {
-        public static IServiceCollection DependencyInjectionServices (this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection DependencyInjectionServices(this IServiceCollection services, IConfiguration configuration)
         {
             //System Services
             services.InjectDbContext(configuration);
@@ -23,6 +27,7 @@ namespace Chillgo.Api
             //Third Party Services
             services.ConfigFluentEmail(configuration);
             services.AddRazorTemplating();
+            services.ConfigFirebase(configuration);
             return services;
         }
 
@@ -57,6 +62,23 @@ namespace Chillgo.Api
             return services;
         }
         //----------------------------------------------------------------------------------
+        private static IServiceCollection ConfigJWT(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+            {
+                options.Authority = $"https://securetoken.google.com/{configuration["FirebaseAdmin:project_id"]}";
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidIssuer = $"https://securetoken.google.com/{configuration["FirebaseAdmin:project_id"]}",
+                    ValidAudience = configuration["FirebaseAdmin:project_id"],
+                };
+            });
+            return services;
+        }
+
         private static IServiceCollection ConfigMapster(this IServiceCollection services)
         {
             //services.AddMapster();
@@ -82,6 +104,18 @@ namespace Chillgo.Api
         private static IServiceCollection ConfigCORS(this IServiceCollection services)
         {
             services.AddCors(options => options.AddPolicy("AllowAll", b => b.AllowAnyHeader().AllowAnyOrigin().AllowAnyMethod()));
+            return services;
+        }
+
+        private static IServiceCollection ConfigFirebase(this IServiceCollection services, IConfiguration configuration)
+        {
+            var firebaseConfig = configuration.GetSection("FirebaseAdmin").Get<Dictionary<string, object>>();
+            var jsonString = JsonSerializer.Serialize(firebaseConfig);
+
+            FirebaseApp.Create(new AppOptions
+            {
+                Credential = GoogleCredential.FromJson(jsonString)
+            });
             return services;
         }
     }
