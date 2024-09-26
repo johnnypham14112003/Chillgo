@@ -1,5 +1,6 @@
 ﻿using Chillgo.Repository.Interfaces;
 using Chillgo.Repository.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,12 +21,28 @@ namespace Chillgo.Repository.Repositories
         // Lấy 5 địa điểm có đánh giá cao nhất
         public List<Location> GetTop5Locations()
         {
+            TestDatabaseConnection();
             return _dbContext.Locations
                 .OrderByDescending(x => x.TotalRating)
                 .Take(5)
                 .ToList();
         }
+        
 
+        public bool TestDatabaseConnection()
+        {
+            try
+            {
+                // Just trying to access the Locations table to see if the connection works
+                return _dbContext.Locations.Any();
+            }
+            catch (Exception ex)
+            {
+                // Log or return error message for further analysis
+                Console.WriteLine($"Connection test failed: {ex.Message}");
+                return false;
+            }
+        }
         // Lấy 5 địa điểm ngẫu nhiên
         public List<Location> GetRandom5Locations()
         {
@@ -53,5 +70,9 @@ namespace Chillgo.Repository.Repositories
 
             return query.Skip((page - 1) * pageSize).Take(pageSize).ToList();
         }
+
+
+
+
     }
 }

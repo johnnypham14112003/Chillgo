@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Chillgo.Repository;
 
-public partial class ChillgoDbContext : DbContext
+public class ChillgoDbContext : DbContext
 {
     public ChillgoDbContext()
     {
@@ -14,55 +14,56 @@ public partial class ChillgoDbContext : DbContext
     {
     }
 
-    public virtual DbSet<Account> Accounts { get; set; }
 
-    public virtual DbSet<Blog> Blogs { get; set; }
+    public DbSet<Account> Accounts { get; set; }
 
-    public virtual DbSet<Booking> Bookings { get; set; }
+    public  DbSet<Blog> Blogs { get; set; }
 
-    public virtual DbSet<BookingDetail> BookingDetails { get; set; }
+    public  DbSet<Booking> Bookings { get; set; }
 
-    public virtual DbSet<BotAi> BotAis { get; set; }
+    public  DbSet<BookingDetail> BookingDetails { get; set; }
 
-    public virtual DbSet<ChillCoinTask> ChillCoinTasks { get; set; }
+    public  DbSet<BotAi> BotAis { get; set; }
 
-    public virtual DbSet<Comment> Comments { get; set; }
+    public  DbSet<ChillCoinTask> ChillCoinTasks { get; set; }
 
-    public virtual DbSet<Conversation> Conversations { get; set; }
+    public  DbSet<Comment> Comments { get; set; }
 
-    public virtual DbSet<CustomerChillCoinTask> CustomerChillCoinTasks { get; set; }
+    public  DbSet<Conversation> Conversations { get; set; }
 
-    public virtual DbSet<CustomerVoucher> CustomerVouchers { get; set; }
+    public  DbSet<CustomerChillCoinTask> CustomerChillCoinTasks { get; set; }
 
-    public virtual DbSet<FavoritedPerson> FavoritedPeople { get; set; }
+    public  DbSet<CustomerVoucher> CustomerVouchers { get; set; }
 
-    public virtual DbSet<Hobby> Hobbies { get; set; }
+    public  DbSet<FavoritedPerson> FavoritedPeople { get; set; }
 
-    public virtual DbSet<Hotel> Hotels { get; set; }
+    public  DbSet<Hobby> Hobbies { get; set; }
 
-    public virtual DbSet<HotelRoom> HotelRooms { get; set; }
+    public  DbSet<Hotel> Hotels { get; set; }
 
-    public virtual DbSet<Image> Images { get; set; }
+    public  DbSet<HotelRoom> HotelRooms { get; set; }
 
-    public virtual DbSet<Location> Locations { get; set; }
+    public  DbSet<Image> Images { get; set; }
 
-    public virtual DbSet<Message> Messages { get; set; }
+    public  DbSet<Location> Locations { get; set; }
 
-    public virtual DbSet<Package> Packages { get; set; }
+    public  DbSet<Message> Messages { get; set; }
 
-    public virtual DbSet<PackageTransaction> PackageTransactions { get; set; }
+    public  DbSet<Package> Packages { get; set; }
 
-    public virtual DbSet<Plan> Plans { get; set; }
+    public  DbSet<PackageTransaction> PackageTransactions { get; set; }
 
-    public virtual DbSet<SalaryTransaction> SalaryTransactions { get; set; }
+    public  DbSet<Plan> Plans { get; set; }
 
-    public virtual DbSet<Schedule> Schedules { get; set; }
+    public  DbSet<SalaryTransaction> SalaryTransactions { get; set; }
 
-    public virtual DbSet<Transport> Transports { get; set; }
+    public  DbSet<Schedule> Schedules { get; set; }
 
-    public virtual DbSet<VerificationRequest> VerificationRequests { get; set; }
+    public  DbSet<Transport> Transports { get; set; }
 
-    public virtual DbSet<Voucher> Vouchers { get; set; }
+    public  DbSet<VerificationRequest> VerificationRequests { get; set; }
+
+    public  DbSet<Voucher> Vouchers { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -888,8 +889,7 @@ public partial class ChillgoDbContext : DbContext
                 .HasDefaultValue("Khả Dụng");
         });
 
-        OnModelCreatingPartial(modelBuilder);
-    }
 
-    partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
+        base.OnModelCreating(modelBuilder);
+    }
 }

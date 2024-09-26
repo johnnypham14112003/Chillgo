@@ -1,6 +1,7 @@
 ﻿using Chillgo.BusinessService.Interfaces;
 using Chillgo.Repository.Interfaces;
 using Chillgo.Repository.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,8 +23,7 @@ namespace Chillgo.BusinessService.Services
         {
             return _locationRepository.GetTop5Locations();
         }
-
-        public List<Location> GetRandom5Locations()
+            public List<Location> GetRandom5Locations()
         {
             return _locationRepository.GetRandom5Locations();
         }
