@@ -18,9 +18,9 @@ namespace Chillgo.BusinessService.Services
             _accountService = new Lazy<IAccountService>(() => new AccountService(unitOfWork));
         }
 
-    public IAccountService GetAccountService()
-    {
-        return _accountService.Value;
+        public IAccountService GetAccountService()
+        {
+            return _accountService.Value;
+        }
     }
-}
 }
