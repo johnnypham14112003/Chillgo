@@ -36,5 +36,24 @@ namespace Chillgo.Api.Controllers
             var createdMessage = await _messageService.CreateMessageAsync(message);
             return Ok(createdMessage);
         }
+
+        [HttpPut("update-status")]
+        public async Task<IActionResult> UpdateMessageStatus(Guid messageId, [FromBody] string status)
+        {
+            if (string.IsNullOrEmpty(status))
+            {
+                return BadRequest("Status không được để trống");
+            }
+
+            try
+            {
+                var updatedMessage = await _messageService.UpdateMessageStatusAsync(messageId, status);
+                return Ok(updatedMessage);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound("Message không tìm thấy");
+            }
+        }
     }
 }

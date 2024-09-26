@@ -10,5 +10,6 @@ namespace Chillgo.BusinessService.Interfaces
     public interface IMessageService
     {
         Task<Message> CreateMessageAsync(Message message);
+        Task<Message> UpdateMessageStatusAsync(Guid messageId, string status);
     }
 }
