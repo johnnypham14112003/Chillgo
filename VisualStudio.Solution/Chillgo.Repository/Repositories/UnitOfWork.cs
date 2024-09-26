@@ -9,6 +9,7 @@ namespace Chillgo.Repository.Repositories
 
         private readonly Lazy<IAccountRepository> _accountRepository;
         private readonly Lazy<IConversationRepository> _conversationRepository;
+        private readonly Lazy<IMessageRepository> _messageRepository;
 
         public UnitOfWork(ChillgoDbContext context)
         {
@@ -17,9 +18,11 @@ namespace Chillgo.Repository.Repositories
 
             _accountRepository = new Lazy<IAccountRepository>(() => new AccountRepository(context));
             _conversationRepository = new Lazy<IConversationRepository>(() => new ConversationRepository(context));
+            _messageRepository = new Lazy<IMessageRepository>(() => new MessageRepository(context));
         }
 
         public IConversationRepository ConversationRepository => _conversationRepository.Value;
+        public IMessageRepository MessageRepository => _messageRepository.Value;
 
         public IAccountRepository GetAccountRepository()
         {
