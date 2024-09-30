@@ -1,8 +1,11 @@
 using Chillgo.Api.Models.Request;
+using Chillgo.Api.Models.Response;
 using Chillgo.BusinessService.BusinessModels;
 using Chillgo.BusinessService.Interfaces;
 using Mapster;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Chillgo.Api.Controllers
 {
@@ -19,18 +22,118 @@ namespace Chillgo.Api.Controllers
         }
 
         //=================================[ Endpoints ]================================
-        [HttpPost("register")]
-        public async Task<ActionResult> Register([FromBody] AccountBaseInfo account)
+        [HttpGet("statistical")]
+        public async Task<IActionResult> TestConnect()
         {
-            BM_Account ServiceAcc = new BM_Account();
-            var result = await _serviceFactory.GetAccountService().CreateAccountAsync(account.Adapt(ServiceAcc));
-            return result ? Ok("Tạo thành công!") : BadRequest("Tạo thất bại!");
+            return Ok(await _serviceFactory.GetAccountService().TotalAccount());
         }
 
-        [HttpGet("Count")]
-        public async Task<ActionResult> TestConnect()
+        [HttpGet("{id}")]
+        public async Task<IActionResult> ViewAccount([FromRoute] Guid id)
         {
-            return Ok(await _serviceFactory.GetAccountService().CountAccount());
+            return Ok(await _serviceFactory.GetAccountService().GetAccountByIdAsync(id));
         }
+
+        [HttpGet("list")]
+        public async Task<IActionResult> GetListAccount([FromQuery] RQ_AccountFilter queryFilter)
+        {
+
+            BM_PagingResults<BM_AccountBaseInfo> accList = await _serviceFactory.GetAccountService().GetAccountsListAsync
+                (queryFilter.Adapt<BM_AccountQuery>());
+
+            return Ok(accList);
+        }
+        //----------------------------------------------------------------------------
+
+        [AllowAnonymous]
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] RQ_AccountAuth clientAccount)
+        {
+            //Pre-validate email format
+            if (!RQ_AccountAuth.IsValidEmail(clientAccount.Email)) { return BadRequest("Email không hợp lệ!"); }
+            
+            //Map clientAccount to BM model in BusinessService
+            BM_Account ServiceAcc = clientAccount.Adapt<BM_Account>();
+
+            var result = await _serviceFactory.GetAccountService().CreateAccountAsync(ServiceAcc);
+            return result ? Created() : BadRequest("Tạo thất bại!");
+        }
+
+        [AllowAnonymous]
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] RQ_AccountAuth clientAccount)
+        {
+            // Validate the email address
+            if (!RQ_AccountAuth.IsValidEmail(clientAccount.Email))
+            {
+                return BadRequest("Invalid email address!");
+            }
+
+            var result = await _serviceFactory.GetAccountService().LoginByPasswordAsync(clientAccount.Email, clientAccount.Password);
+
+            if (result.accInfo is null || string.IsNullOrEmpty(result.firebaseToken)) { return Unauthorized("Đã có lỗi khi đăng nhập! Vui lòng thử lại sau."); }
+
+            return Ok(new
+            {
+                JwtToken = result.firebaseToken,
+                AccountInfo = result.accInfo
+            });
+        }
+
+        /*[HttpPost("google-authentication")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GoogleLogin([FromBody] GoogleResponse responseData)
+        {
+            string jwtToken = await _serviceFactory.GetAccountService().HandleGoogleAsync(responseData.Token, responseData.Platform);
+
+            return jwtToken.IsNullOrEmpty() ?
+                BadRequest("There is an error during generate JWT Token!") :
+                Created(nameof(Login), new JwtToken
+                {
+                    Token = jwtToken
+                });
+        }
+
+        //----------------------------------------------------------------------------
+        [HttpPatch("role-management")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> ChangeRole([FromBody] AccountNewRole input)
+        {
+            bool result = await _serviceFactory.GetAccountService().ChangeRoleAccountAsync(input.Id, input.NewRole);
+            if (result == true)
+            {
+                return Ok("Update Success!");
+            }
+            return BadRequest("Update Failed!");
+        }
+
+        [HttpPatch("password-recovery")]
+        public async Task<IActionResult> ResetPassword()
+        {
+            //Is doing with Google Cloud Api
+            return Ok();
+        }
+
+        [HttpPatch("new-password")]
+        [Authorize(Roles = "member")]
+        public async Task<IActionResult> ChangePassword([FromBody] AccountNewPassword input)
+        {
+            if (input.OldPassword.IsNullOrEmpty())
+            {
+                return BadRequest("Old password required for confirmation!");
+            }
+            bool result = await _serviceFactory.GetAccountService().ChangePasswordAccountAsync(input.Id, input.OldPassword, input.NewPassword, false);
+            return result ? Ok("Update Success!") : BadRequest("Update Failed!");
+        }
+
+        //----------------------------------------------------------------------------
+        [HttpDelete]
+        [Authorize(Roles = "member")]
+        public async Task<IActionResult> Delete([FromBody] AccountConfirm acc)
+        {
+            bool result = await _serviceFactory.GetAccountService().DeleteAccountAsync(acc.Id, acc.Password);
+            return result ? Ok("Delete Success!") : BadRequest("Delete Failed!");
+        }*/
+
     }
 }

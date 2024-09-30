@@ -1,17 +1,11 @@
-﻿using Chillgo.Repository.Models;
-
-namespace Chillgo.BusinessService.BusinessModels
+﻿namespace Chillgo.Api.Models.Response
 {
-    public class BM_Account
+    public class RS_AccountProfile
     {
         public Guid Id { get; set; }
-
         public string FirebaseUid { get; set; } = null!;
-
         public string Email { get; set; } = null!;
-
         public string Password { get; set; } = null!;
-
         public string FullName { get; set; } = null!;
 
         public string? Address { get; set; }
@@ -30,19 +24,7 @@ namespace Chillgo.BusinessService.BusinessModels
 
         public int ChillCoin { get; set; }
 
-        public string? FcmToken { get; set; }
-
-        public string? GoogleId { get; set; }
-
-        public string? FacebookId { get; set; }
-
-        public string? Expertise { get; set; }
-
         public string? Language { get; set; }
-
-        public decimal Rating { get; set; }
-
-        public string? CompanyName { get; set; }
 
         public string Role { get; set; } = null!;
 

@@ -3,13 +3,23 @@ using Chillgo.BusinessService.Services;
 using Chillgo.Repository;
 using Chillgo.Repository.Interfaces;
 using Chillgo.Repository.Repositories;
+using Chillgo.BusinessService.Extensions;
+
+using Mapster;
+using System.Text;
+
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
-using Mapster;
+
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System.Text.Json;
+
+using Newtonsoft.Json.Serialization;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
+using System.Security.Cryptography.X509Certificates;
 
 
 namespace Chillgo.Api
@@ -23,11 +33,13 @@ namespace Chillgo.Api
             services.InjectBusinessServices();
             services.InjectRepository();
             services.ConfigCORS();
+            services.ConfigKebabCase();
 
             //Third Party Services
             services.ConfigFluentEmail(configuration);
             services.AddRazorTemplating();
             services.ConfigFirebase(configuration);
+
             return services;
         }
 
@@ -62,20 +74,20 @@ namespace Chillgo.Api
             return services;
         }
         //----------------------------------------------------------------------------------
-        private static IServiceCollection ConfigJWT(this IServiceCollection services, IConfiguration configuration)
+        private static IServiceCollection ConfigKebabCase(this IServiceCollection services)
         {
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+            services.AddControllers(options =>
             {
-                options.Authority = $"https://securetoken.google.com/{configuration["FirebaseAdmin:project_id"]}";
-                options.TokenValidationParameters = new TokenValidationParameters
+                options.Conventions.Add(new RouteTokenTransformerConvention(new KebabRouteTransform()));
+            }).AddNewtonsoftJson(options =>
+            {//If using NewtonSoft in project then must orride default Naming rule of System.text
+                options.SerializerSettings.ContractResolver = new DefaultContractResolver
                 {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ValidIssuer = $"https://securetoken.google.com/{configuration["FirebaseAdmin:project_id"]}",
-                    ValidAudience = configuration["FirebaseAdmin:project_id"],
+                    NamingStrategy = new KebabCaseNamingStrategy()
                 };
             });
+
+            services.AddSwaggerGen(c => { c.SchemaFilter<KebabSwaggerSchema>(); });
             return services;
         }
 
@@ -109,13 +121,60 @@ namespace Chillgo.Api
 
         private static IServiceCollection ConfigFirebase(this IServiceCollection services, IConfiguration configuration)
         {
-            var firebaseConfig = configuration.GetSection("FirebaseAdmin").Get<Dictionary<string, object>>();
-            var jsonString = JsonSerializer.Serialize(firebaseConfig);
+            var firebaseConfig = new JObject();
 
-            FirebaseApp.Create(new AppOptions
+            //Read from appsettings
+            var appsettingsConfig = configuration.GetSection("FirebaseAdmin").Get<Dictionary<string, string>>();
+            foreach (var item in appsettingsConfig)
             {
-                Credential = GoogleCredential.FromJson(jsonString)
-            });
+                firebaseConfig[item.Key] = item.Value;
+            }
+
+            //Convert Jobject to json
+            string jsonConfig = JsonConvert.SerializeObject(firebaseConfig);
+            if (FirebaseApp.DefaultInstance == null)
+            {
+                FirebaseApp.Create(new AppOptions
+                {
+                    Credential = GoogleCredential.FromJson(jsonConfig)
+                });
+            }
+
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.Authority = $"https://securetoken.google.com/{firebaseConfig["project_id"]}";
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidIssuer = $"https://securetoken.google.com/{firebaseConfig["project_id"]}",
+                        ValidateAudience = true,
+                        ValidAudience = firebaseConfig["project_id"]!.ToString(),
+                        ValidateLifetime = true,
+                        IssuerSigningKeyResolver = (token, securityToken, kid, parameters) =>
+                        {
+                            // Download public keys from Firebase
+                            var httpClient = new HttpClient();
+                            var keys = httpClient.GetStringAsync("https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com").Result;
+
+                            // Parse response
+                            var x509Keys = JObject.Parse(keys);
+
+                            // find public key by kid (Key ID)
+                            if (x509Keys.ContainsKey(kid))
+                            {
+                                var pubKey = x509Keys[kid].ToString();
+                                var certificate = new X509Certificate2(Encoding.UTF8.GetBytes(pubKey));
+
+                                // convert X.509 certificate to RSA public key
+                                var rsa = certificate.GetRSAPublicKey();
+                                return new[] { new RsaSecurityKey(rsa) };
+                            }
+
+                            return null;
+                        }
+                    };
+                });
             return services;
         }
     }
