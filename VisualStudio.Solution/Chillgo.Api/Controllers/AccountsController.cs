@@ -5,7 +5,6 @@ using Chillgo.BusinessService.Interfaces;
 using Mapster;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
 
 namespace Chillgo.Api.Controllers
 {
@@ -33,7 +32,8 @@ namespace Chillgo.Api.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> ViewAccount([FromRoute] Guid id)
         {
-            return Ok(await _serviceFactory.GetAccountService().GetAccountByIdAsync(id));
+            var accountInfo = await _serviceFactory.GetAccountService().GetAccountByIdAsync(id);
+            return Ok(accountInfo.Adapt<RS_AccountSecured>());
         }
 
         [Authorize]
@@ -52,23 +52,14 @@ namespace Chillgo.Api.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RQ_AccountAuth clientAccount)
         {
-            //Pre-validate email format
-            if (!RQ_AccountAuth.IsValidEmail(clientAccount.Email)) { return BadRequest("Email không hợp lệ!"); }
-
             var result = await _serviceFactory.GetAccountService().CreateAccountAsync(clientAccount.Adapt<BM_Account>());
-            return result ? Created() : BadRequest("Tạo thất bại!");
+            return result ? Created(nameof(Register), "Tạo thành công!") : BadRequest("Tạo thất bại!");
         }
 
         [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] RQ_AccountAuth clientAccount)
         {
-            // Validate the email address
-            if (!RQ_AccountAuth.IsValidEmail(clientAccount.Email))
-            {
-                return BadRequest("Invalid email address!");
-            }
-
             var result = await _serviceFactory.GetAccountService().LoginByPasswordAsync(clientAccount.Adapt<BM_Account>());
 
             if (result.accInfo is null || string.IsNullOrEmpty(result.jwtToken)) { return Unauthorized("Đã có lỗi khi đăng nhập! Vui lòng thử lại sau."); }
@@ -93,18 +84,24 @@ namespace Chillgo.Api.Controllers
                     Token = jwtToken
                 });
         }
-
+        */
         //----------------------------------------------------------------------------
-        [HttpPatch("role-management")]
-        [Authorize(Roles = "admin")]
-        public async Task<IActionResult> ChangeRole([FromBody] AccountNewRole input)
+        [Authorize]
+        [HttpPatch("updating")]
+        public async Task<IActionResult> ChangeRole([FromBody] RQ_AccountBaseInfo updatedAccount)
         {
-            bool result = await _serviceFactory.GetAccountService().ChangeRoleAccountAsync(input.Id, input.NewRole);
-            if (result == true)
-            {
-                return Ok("Update Success!");
-            }
-            return BadRequest("Update Failed!");
+            bool result = await _serviceFactory.GetAccountService().UpdateAccountAsync(updatedAccount.Adapt<BM_Account>());
+            
+            return result == true ? Ok("Update Success!") : BadRequest("Update Failed!");
+        }
+
+        [Authorize]
+        [HttpPatch("role-management")]
+        public async Task<IActionResult> ChangeRole([FromBody] RQ_AccountPermission clientRequest)
+        {
+            bool result = await _serviceFactory.GetAccountService().ChangeRoleAccountAsync(clientRequest.Adapt<BM_Account>(), clientRequest.targetAccountId);
+
+            return result == true ? Ok("Update Success!") : BadRequest("Update Failed!");
         }
 
         [HttpPatch("password-recovery")]
@@ -114,26 +111,25 @@ namespace Chillgo.Api.Controllers
             return Ok();
         }
 
+        [Authorize]
         [HttpPatch("new-password")]
-        [Authorize(Roles = "member")]
-        public async Task<IActionResult> ChangePassword([FromBody] AccountNewPassword input)
+        public async Task<IActionResult> ChangePassword([FromBody] RQ_AccountPermission input)
         {
-            if (input.OldPassword.IsNullOrEmpty())
-            {
-                return BadRequest("Old password required for confirmation!");
-            }
-            bool result = await _serviceFactory.GetAccountService().ChangePasswordAccountAsync(input.Id, input.OldPassword, input.NewPassword, false);
+            if (string.IsNullOrEmpty(input.Password) || string.IsNullOrEmpty(input.NewPassword))
+            { return BadRequest("Both type of password required for handle!"); }
+
+            bool result = await _serviceFactory.GetAccountService().ChangePasswordAccountAsync(input.Adapt<BM_Account>(), input.targetAccountId, input.NewPassword);
             return result ? Ok("Update Success!") : BadRequest("Update Failed!");
         }
 
         //----------------------------------------------------------------------------
+        [Authorize]
         [HttpDelete]
-        [Authorize(Roles = "member")]
-        public async Task<IActionResult> Delete([FromBody] AccountConfirm acc)
+        public async Task<IActionResult> Delete([FromBody] RQ_AccountPermission clientRequest)
         {
-            bool result = await _serviceFactory.GetAccountService().DeleteAccountAsync(acc.Id, acc.Password);
+            bool result = await _serviceFactory.GetAccountService().DeleteAccountAsync(clientRequest.Adapt<BM_Account>(), clientRequest.targetAccountId);
             return result ? Ok("Delete Success!") : BadRequest("Delete Failed!");
-        }*/
+        }
 
     }
 }

@@ -81,21 +81,25 @@ namespace Chillgo.BusinessService.Services
 
         public async Task<bool> CreateAccountAsync(BM_Account AccountFromClient)
         {
-            string rollbackId = "";
+            bool saveResult;
+            string firebaseUid;
+
             try
             {
                 //Validate fullname
-                if (string.IsNullOrEmpty(AccountFromClient.FullName))
-                { throw new BadRequestException("Tên người dùng rỗng!"); }
+                if (string.IsNullOrEmpty(AccountFromClient.FullName)) throw new BadRequestException("Tên người dùng rỗng!");
+
+                CheckValidEmail(AccountFromClient.Email);
 
                 //Validate Password minimum lenght
                 if (AccountFromClient.Password.Count() < 6)
                 { throw new BadRequestException("Mật khẩu tối thiểu 6 ký tự!"); }
 
-                var existAcc = await _unitOfWork.GetAccountRepository().GetOneAsync(acc => acc.Email.ToLower().Equals(AccountFromClient.Email.ToLower()), false);
-
-                // Validate exist
-                if (existAcc is not null)
+                var existAcc = await _unitOfWork.GetAccountRepository().GetOneAsync(acc =>
+                acc.Email.ToLower().Equals(AccountFromClient.Email.ToLower()));
+                
+                // Validate exist - No deleted
+                if (existAcc is not null && !DeletedChecker(existAcc.Status))
                 { throw new ConflictException("Tài khoản Email này đã tồn tại trong hệ thống"); }
 
                 //Hash Password
@@ -103,23 +107,36 @@ namespace Chillgo.BusinessService.Services
                 AccountFromClient.Password = securedPassword;
 
                 //Register account to Firebase and get FirebaseUid
-                var firebaseUid = await FirebaseRegisterAccount(AccountFromClient);
+                firebaseUid = await FirebaseRegisterAccount(AccountFromClient);
+
+                // if exist by deleted => recorver
+                if (existAcc is not null && DeletedChecker(existAcc.Status))
+                {
+                    existAcc.Status = "Đã Xác Thực";
+                    existAcc.FirebaseUid = firebaseUid;
+
+                    saveResult = await _unitOfWork.GetAccountRepository().SaveChangeAsync();
+
+                    //Rollback Firebase creation if save in DB failed!
+                    if (saveResult == false) await FirebaseAuth.DefaultInstance.DeleteUserAsync(firebaseUid);
+
+                    return saveResult;
+                }
 
                 //Map data of 'AccountFromClient'  (BM_Account -> Account)
                 var AccountInDb = AccountFromClient.Adapt<Account>();
 
-                //Create and get FirebaseUid
+                //Assign FirebaseUid
                 AccountInDb.FirebaseUid = firebaseUid;
-                rollbackId = firebaseUid;
 
                 //Save to DB
                 await _unitOfWork.GetAccountRepository().AddAsync(AccountInDb);
-                bool saveRusult = await _unitOfWork.GetAccountRepository().SaveChangeAsync();
+                saveResult = await _unitOfWork.GetAccountRepository().SaveChangeAsync();
 
                 //Rollback Firebase user creation if save in DB failed!
-                if (saveRusult == false) await FirebaseAuth.DefaultInstance.DeleteUserAsync(AccountInDb.FirebaseUid);
+                if (saveResult == false) await FirebaseAuth.DefaultInstance.DeleteUserAsync(firebaseUid);
 
-                return saveRusult;
+                return saveResult;
             }
             catch (Exception ex)
             {
@@ -131,13 +148,14 @@ namespace Chillgo.BusinessService.Services
         {
             try
             {
-                
+                CheckValidEmail(account.Email);
+
                 // Check account in database
                 var existAccount = await _unitOfWork.GetAccountRepository()
                     .GetOneAsync(acc => acc.Email.ToLower().Equals(account.Email.ToLower()), false);
 
                 if (existAccount is null)
-                { throw new UnauthorizedAccessException("Tài khoản không tồn tại trong hệ thống."); }
+                { throw new UnauthorizedException("Tài khoản không tồn tại trong hệ thống."); }
 
                 //Hash Password
                 var securedPassword = HashStringSHA256(account.Password);
@@ -154,13 +172,109 @@ namespace Chillgo.BusinessService.Services
                 return (firebaseJwtToken, existAccount.Adapt<BM_AccountBaseInfo>());
             }
             catch (FirebaseAuthException firebaseEx)
-            {
-                throw new BadRequestException($"Firebase authentication failed: {firebaseEx.Message}");
-            }
+            { throw new BadRequestException($"Firebase authentication failed: {firebaseEx.Message}"); }
             catch (Exception ex)
+            { throw new BadRequestException($"Login failed: {ex.Message}"); }
+        }
+
+        public async Task<bool> UpdateAccountAsync(BM_Account updateAccount)
+        {
+            // Find Account of current email access this method
+            Account oldAccount = await _unitOfWork.GetAccountRepository().GetByIdAsync(updateAccount.Id)
+                ?? throw new NotFoundException("Current Account Access Is Not Exist!");
+
+            oldAccount.FullName = updateAccount.FullName;
+            oldAccount.Address = updateAccount.Address;
+            oldAccount.PhoneNumber = updateAccount.PhoneNumber;
+            oldAccount.Cccd = updateAccount.Cccd;
+            oldAccount.DateOfBirth = updateAccount.DateOfBirth;
+            oldAccount.Gender = updateAccount.Gender;
+            oldAccount.LastUpdated = updateAccount.LastUpdated;
+            oldAccount.Expertise = updateAccount.Expertise;
+            oldAccount.Language = updateAccount.Language;
+            oldAccount.CompanyName = updateAccount.CompanyName;
+
+            return await _unitOfWork.GetAccountRepository().SaveChangeAsync();
+        }
+
+        public async Task<bool> ChangeRoleAccountAsync(BM_Account clientRequest, Guid targetAid)
+        {
+            Account targetChangeRole;
+
+            CheckValidEmail(clientRequest.Email);
+
+            // Find Account of current email access this method
+            var currentAccess = await _unitOfWork.GetAccountRepository().GetOneAsync(acc =>
+            acc.Email.ToLower().Equals(clientRequest.Email.ToLower()))
+                ?? throw new NotFoundException("Current Account Access Is Not Exist!");
+
+            targetChangeRole = (currentAccess.Id == targetAid)
+                ? currentAccess : await _unitOfWork.GetAccountRepository().GetByIdAsync(targetAid)
+                ?? throw new NotFoundException("The selected account to change role is not exist!");
+
+            // Confirm Owner is doing
+            if (!currentAccess.Password.Equals(HashStringSHA256(clientRequest.Password)))
+            { throw new BadRequestException("Sai mật khẩu! Xác nhận chủ tài khoản lỗi!"); }
+
+            // If you're not the admin, staff but want to change role to admin, staff
+            if (!currentAccess.Role.ToLower().Equals("admin") || !currentAccess.Role.ToLower().Equals("nhân viên quản lý"))
             {
-                throw new BadRequestException($"Login failed: {ex.Message}");
+                if (clientRequest.Role.ToLower().Equals("admin") || clientRequest.Role.ToLower().Equals("nhân viên quản lý"))
+                { throw new UnauthorizedException("Bạn không có quyền đổi Role này"); }
             }
+
+            targetChangeRole.Role = clientRequest.Role;
+            return await _unitOfWork.GetAccountRepository().SaveChangeAsync();
+        }
+
+        public async Task<bool> ChangePasswordAccountAsync(BM_Account clientRequest, Guid targetAid, string newPassword)
+        {
+            Account targetChangePass;
+
+            CheckValidEmail(clientRequest.Email);
+
+            // Find Account of current email access this method
+            var currentAccess = await _unitOfWork.GetAccountRepository().GetOneAsync(acc =>
+            acc.Email.ToLower().Equals(clientRequest.Email.ToLower()))
+                ?? throw new NotFoundException("Current Account Access Is Not Exist!");
+
+            targetChangePass = (currentAccess.Id == targetAid)
+                ? currentAccess : await _unitOfWork.GetAccountRepository().GetByIdAsync(targetAid)
+                ?? throw new NotFoundException("The selected account to change role is not exist!");
+
+            // Confirm Owner is doing
+            if (!currentAccess.Password.Equals(HashStringSHA256(clientRequest.Password)))
+            { throw new BadRequestException("Sai mật khẩu! Xác nhận chủ tài khoản lỗi!"); }
+
+            targetChangePass.Password = HashStringSHA256(newPassword);
+            return await _unitOfWork.GetAccountRepository().SaveChangeAsync();
+        }
+
+        public async Task<bool> DeleteAccountAsync(BM_Account clientRequest, Guid targetAid)
+        {
+            Account targetAccount;
+            CheckValidEmail(clientRequest.Email);
+
+            // Find Account of current email access this method
+            var currentAccess = await _unitOfWork.GetAccountRepository().GetOneAsync(acc =>
+            acc.Email.ToLower().Equals(clientRequest.Email.ToLower()))
+                ?? throw new NotFoundException("Current Account Access Is Not Exist!");
+
+            targetAccount = (currentAccess.Id == targetAid)
+                ? currentAccess : await _unitOfWork.GetAccountRepository().GetByIdAsync(targetAid)
+                ?? throw new NotFoundException("The selected account to change role is not exist!");
+
+            // Confirm Owner is doing
+            if (!currentAccess.Password.Equals(HashStringSHA256(clientRequest.Password)))
+            { throw new BadRequestException("Sai mật khẩu! Xác nhận chủ tài khoản lỗi!"); }
+
+            // Delete Soft
+            targetAccount.Status = "Đã Xóa";
+            var result = await _unitOfWork.GetAccountRepository().SaveChangeAsync();
+
+            if (result) await FirebaseAuth.DefaultInstance.DeleteUserAsync(targetAccount.FirebaseUid);
+
+            return result;
         }
 
         //=============================================================================================
@@ -200,12 +314,23 @@ namespace Chillgo.BusinessService.Services
             }
         }
 
+        private static void CheckValidEmail(string email)
+        {
+            try
+            { var addr = new System.Net.Mail.MailAddress(email); }
+            catch
+            { throw new BadRequestException("Email không hợp lệ!"); }
+        }
+
         private static void BannedChecker(string status)
         {
-            if (status.ToLower().Equals("Bị Cấm".ToLower()))
-            {
-                throw new BadRequestException("Tài khoản Email này đã bị cấm truy vào hệ thống!");
-            }
+            if (status.ToLower().Equals("bị cấm"))
+            { throw new BadRequestException("Tài khoản Email này đã bị cấm truy cập vào hệ thống!"); }
+        }
+
+        private static bool DeletedChecker(string status)
+        {
+            return status.ToLower().Equals("đã xóa");
         }
 
         public Task<string> HandleGoogleAsync(string token, string platform)
@@ -213,25 +338,7 @@ namespace Chillgo.BusinessService.Services
             throw new NotImplementedException();
         }
 
-        public Task<bool> ChangeRoleAccountAsync(Guid accountId, string newRole)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<bool> ChangePasswordAccountAsync(Guid accountId, string oldPassword, string newPassword, bool privilegedOverride)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<bool> RecoverAccountAsync(string email, string newStatus)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<bool> DeleteAccountAsync(Guid accountId, string confirmPassword)
-        {
-            throw new NotImplementedException();
-        }
+        
 
         public Task<bool> BanAccount(Guid accountId)
         {

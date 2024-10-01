@@ -1,12 +1,13 @@
-﻿namespace Chillgo.Api.Models.Response
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Chillgo.Api.Models.Response
 {
-    public class RS_AccountProfile
+    public class RS_AccountSecured
     {
         public Guid Id { get; set; }
-        public string FirebaseUid { get; set; } = null!;
-        public string Email { get; set; } = null!;
-        public string Password { get; set; } = null!;
-        public string FullName { get; set; } = null!;
+        [Required] public required string FirebaseUid { get; set; }
+        [Required] public required string Email { get; set; }
+        [Required] public required string FullName { get; set; }
 
         public string? Address { get; set; }
 
@@ -26,8 +27,8 @@
 
         public string? Language { get; set; }
 
-        public string Role { get; set; } = null!;
+        [Required] public required string Role { get; set; }
 
-        public string Status { get; set; } = null!;
+        [Required] public required string Status { get; set; }
     }
 }

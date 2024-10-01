@@ -2,10 +2,12 @@
 
 namespace Chillgo.Api.Models.Request
 {
-    public class RQ_AccountAuth
+    public class RQ_AccountPermission
     {
-        public string? FullName { get; set; }
+        public Guid targetAccountId { get; set; } = Guid.Empty;
         [Required][EmailAddress] public required string Email { get; set; }
         [Required] public required string Password { get; set; }
+        public string? NewPassword { get; set; }
+        [Required] public required string Role { get; set; }
     }
 }

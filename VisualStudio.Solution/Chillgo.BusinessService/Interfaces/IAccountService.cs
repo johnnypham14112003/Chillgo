@@ -10,10 +10,10 @@ namespace Chillgo.BusinessService.Interfaces
         Task<bool> CreateAccountAsync(BM_Account newAccount);
         Task<(string jwtToken, BM_AccountBaseInfo accInfo)> LoginByPasswordAsync(BM_Account account);
         Task<string> HandleGoogleAsync(string token, string platform);
-        Task<bool> ChangeRoleAccountAsync(Guid accountId, string newRole);
-        Task<bool> ChangePasswordAccountAsync(Guid accountId, string oldPassword, string newPassword, bool privilegedOverride);
-        Task<bool> RecoverAccountAsync(string email, string newStatus);
-        Task<bool> DeleteAccountAsync(Guid accountId, string confirmPassword);
+        Task<bool> UpdateAccountAsync(BM_Account updateAccount);
+        Task<bool> ChangeRoleAccountAsync(BM_Account clientRequest, Guid targetAid);
+        Task<bool> ChangePasswordAccountAsync(BM_Account clientRequest, Guid targetAid, string newPassword);
+        Task<bool> DeleteAccountAsync(BM_Account clientRequest, Guid targetAid);
         Task<bool> BanAccount(Guid accountId);
     }
 }
