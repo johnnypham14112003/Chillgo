@@ -8,16 +8,19 @@ using System.Security.Cryptography;
 using System.Text;
 
 using FirebaseAdmin.Auth;
+using Microsoft.Identity.Client;
 
 namespace Chillgo.BusinessService.Services
 {
     public class AccountService : IAccountService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IAuthenticationService _authenticationService;
 
-        public AccountService(IUnitOfWork unitOfWork)
+        public AccountService(IUnitOfWork unitOfWork, IAuthenticationService authenticationService)
         {
             _unitOfWork = unitOfWork;
+            _authenticationService = authenticationService;
         }
 
         //=============================================================================
@@ -78,28 +81,36 @@ namespace Chillgo.BusinessService.Services
 
         public async Task<bool> CreateAccountAsync(BM_Account AccountFromClient)
         {
+            string rollbackId = "";
             try
             {
+                //Validate fullname
                 if (string.IsNullOrEmpty(AccountFromClient.FullName))
-                {
-                    throw new BadRequestException("Tên người dùng rỗng!");
-                }
+                { throw new BadRequestException("Tên người dùng rỗng!"); }
+
+                //Validate Password minimum lenght
+                if (AccountFromClient.Password.Count() < 6)
+                { throw new BadRequestException("Mật khẩu tối thiểu 6 ký tự!"); }
 
                 var existAcc = await _unitOfWork.GetAccountRepository().GetOneAsync(acc => acc.Email.ToLower().Equals(AccountFromClient.Email.ToLower()), false);
+
+                // Validate exist
                 if (existAcc is not null)
-                {
-                    throw new ConflictException("Tài khoản Email này đã tồn tại trong hệ thống");
-                }
+                { throw new ConflictException("Tài khoản Email này đã tồn tại trong hệ thống"); }
 
                 //Hash Password
                 string securedPassword = HashStringSHA256(AccountFromClient.Password);
                 AccountFromClient.Password = securedPassword;
 
+                //Register account to Firebase and get FirebaseUid
+                var firebaseUid = await FirebaseRegisterAccount(AccountFromClient);
+
                 //Map data of 'AccountFromClient'  (BM_Account -> Account)
                 var AccountInDb = AccountFromClient.Adapt<Account>();
 
                 //Create and get FirebaseUid
-                AccountInDb.FirebaseUid = await FirebaseRegisterAccount(AccountFromClient); ;
+                AccountInDb.FirebaseUid = firebaseUid;
+                rollbackId = firebaseUid;
 
                 //Save to DB
                 await _unitOfWork.GetAccountRepository().AddAsync(AccountInDb);
@@ -116,31 +127,31 @@ namespace Chillgo.BusinessService.Services
             }
         }
 
-        public async Task<(string firebaseToken, BM_AccountBaseInfo accInfo)> LoginByPasswordAsync(string email, string password)
+        public async Task<(string jwtToken, BM_AccountBaseInfo accInfo)> LoginByPasswordAsync(BM_Account account)
         {
             try
             {
-                // Authenticate with Firebase
-                UserRecord userRecord = await FirebaseAuth.DefaultInstance.GetUserByEmailAsync(email);
-
+                
                 // Check account in database
-                var existAccount = await _unitOfWork.GetAccountRepository().GetOneAsync(acc => acc.Email.ToLower().Equals(email.ToLower()), false);
+                var existAccount = await _unitOfWork.GetAccountRepository()
+                    .GetOneAsync(acc => acc.Email.ToLower().Equals(account.Email.ToLower()), false);
+
                 if (existAccount is null)
-                {
-                    throw new UnauthorizedAccessException("Tài khoản không tồn tại trong hệ thống.");
-                }
+                { throw new UnauthorizedAccessException("Tài khoản không tồn tại trong hệ thống."); }
 
-                if (!HashStringSHA256(password).Equals(existAccount.Password))
-                {
-                    throw new BadRequestException("Sai mật khẩu đăng nhập!");
-                }
+                //Hash Password
+                var securedPassword = HashStringSHA256(account.Password);
 
-                // Create Firebase Jwt token
-                string jwtToken = await FirebaseAuth.DefaultInstance.CreateCustomTokenAsync(userRecord.Uid);
+                // If password not match
+                if (!securedPassword.Equals(existAccount.Password))
+                { throw new BadRequestException("Sai mật khẩu đăng nhập!"); }
 
-                BM_AccountBaseInfo accountInfo = existAccount.Adapt<BM_AccountBaseInfo>();
+                account.Password = securedPassword;
 
-                return (jwtToken, accountInfo);
+                // Authenticate with Firebase
+                var firebaseJwtToken = await _authenticationService.GetForCredentialsAsync(account);
+
+                return (firebaseJwtToken, existAccount.Adapt<BM_AccountBaseInfo>());
             }
             catch (FirebaseAuthException firebaseEx)
             {
@@ -168,13 +179,6 @@ namespace Chillgo.BusinessService.Services
             return builder.ToString();
         }
 
-        private static void BannedChecker(string status)
-        {
-            if (status.ToLower().Equals("Bị Cấm".ToLower()))
-            {
-                throw new BadRequestException("Tài khoản Email này đã bị cấm truy vào hệ thống.");
-            }
-        }
         private async Task<string> FirebaseRegisterAccount(BM_Account newAccount)
         {
             try
@@ -188,13 +192,19 @@ namespace Chillgo.BusinessService.Services
 
                 UserRecord userRecord = await FirebaseAuth.DefaultInstance.CreateUserAsync(firebaseUser);
 
-                //string customToken = await FirebaseAuth.DefaultInstance.CreateCustomTokenAsync(userRecord.Uid);
-
                 return userRecord.Uid;
             }
             catch (FirebaseAuthException firebaseEx)
             {
                 throw new BadRequestException("Đã có lỗi ở hàm FirebaseRegisterAccount: " + firebaseEx.Message);
+            }
+        }
+
+        private static void BannedChecker(string status)
+        {
+            if (status.ToLower().Equals("Bị Cấm".ToLower()))
+            {
+                throw new BadRequestException("Tài khoản Email này đã bị cấm truy vào hệ thống!");
             }
         }
 

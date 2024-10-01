@@ -22,18 +22,21 @@ namespace Chillgo.Api.Controllers
         }
 
         //=================================[ Endpoints ]================================
+        [Authorize]
         [HttpGet("statistical")]
         public async Task<IActionResult> TestConnect()
         {
             return Ok(await _serviceFactory.GetAccountService().TotalAccount());
         }
 
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<IActionResult> ViewAccount([FromRoute] Guid id)
         {
             return Ok(await _serviceFactory.GetAccountService().GetAccountByIdAsync(id));
         }
 
+        [Authorize]
         [HttpGet("list")]
         public async Task<IActionResult> GetListAccount([FromQuery] RQ_AccountFilter queryFilter)
         {
@@ -51,11 +54,8 @@ namespace Chillgo.Api.Controllers
         {
             //Pre-validate email format
             if (!RQ_AccountAuth.IsValidEmail(clientAccount.Email)) { return BadRequest("Email không hợp lệ!"); }
-            
-            //Map clientAccount to BM model in BusinessService
-            BM_Account ServiceAcc = clientAccount.Adapt<BM_Account>();
 
-            var result = await _serviceFactory.GetAccountService().CreateAccountAsync(ServiceAcc);
+            var result = await _serviceFactory.GetAccountService().CreateAccountAsync(clientAccount.Adapt<BM_Account>());
             return result ? Created() : BadRequest("Tạo thất bại!");
         }
 
@@ -69,13 +69,13 @@ namespace Chillgo.Api.Controllers
                 return BadRequest("Invalid email address!");
             }
 
-            var result = await _serviceFactory.GetAccountService().LoginByPasswordAsync(clientAccount.Email, clientAccount.Password);
+            var result = await _serviceFactory.GetAccountService().LoginByPasswordAsync(clientAccount.Adapt<BM_Account>());
 
-            if (result.accInfo is null || string.IsNullOrEmpty(result.firebaseToken)) { return Unauthorized("Đã có lỗi khi đăng nhập! Vui lòng thử lại sau."); }
+            if (result.accInfo is null || string.IsNullOrEmpty(result.jwtToken)) { return Unauthorized("Đã có lỗi khi đăng nhập! Vui lòng thử lại sau."); }
 
             return Ok(new
             {
-                JwtToken = result.firebaseToken,
+                JwtToken = result.jwtToken,
                 AccountInfo = result.accInfo
             });
         }

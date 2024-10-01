@@ -4,7 +4,7 @@ using Chillgo.Api.Middlewares;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.DependencyInjectionServices(builder.Configuration);
+builder.Services.DependencyInjectionServices(builder.Configuration, builder.Environment);
 
 builder.Services.AddControllers()
     .AddNewtonsoftJson(options => options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
@@ -30,7 +30,7 @@ app.UseHttpsRedirection();
 
 app.UseRouting();
 
-// Jwt Authent
+// Jwt Authentication Middleware
 app.UseAuthentication();
 app.UseAuthorization();
 
