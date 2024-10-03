@@ -81,8 +81,8 @@ namespace Chillgo.BusinessService.Services
 
         public async Task<bool> CreateAccountAsync(BM_Account AccountFromClient)
         {
-            bool saveResult;
-            string firebaseUid;
+            bool saveResult=false;
+            string firebaseUid="";
 
             try
             {
@@ -107,7 +107,7 @@ namespace Chillgo.BusinessService.Services
                 AccountFromClient.Password = securedPassword;
 
                 //Register account to Firebase and get FirebaseUid
-                firebaseUid = await FirebaseRegisterAccount(AccountFromClient);
+                firebaseUid = await _authenticationService.FirebaseRegisterAccount(AccountFromClient);
 
                 // if exist by deleted => recorver
                 if (existAcc is not null && DeletedChecker(existAcc.Status))
@@ -133,41 +133,40 @@ namespace Chillgo.BusinessService.Services
                 await _unitOfWork.GetAccountRepository().AddAsync(AccountInDb);
                 saveResult = await _unitOfWork.GetAccountRepository().SaveChangeAsync();
 
-                //Rollback Firebase user creation if save in DB failed!
-                if (saveResult == false) await FirebaseAuth.DefaultInstance.DeleteUserAsync(firebaseUid);
-
                 return saveResult;
             }
             catch (Exception ex)
             {
+                //Rollback Firebase user creation if save in DB failed!
+                if (saveResult == false) await FirebaseAuth.DefaultInstance.DeleteUserAsync(firebaseUid);
+                //await FirebaseAuth.DefaultInstance.DeleteUserAsync(firebaseUid);
                 throw new BadRequestException("Đã có lỗi ở hàm CreateAccountAsync: " + ex.Message);
             }
         }
 
-        public async Task<(string jwtToken, BM_AccountBaseInfo accInfo)> LoginByPasswordAsync(BM_Account account)
+        public async Task<(string jwtToken, BM_AccountBaseInfo accInfo)> LoginByPasswordAsync(BM_Account clientRequest)
         {
             try
             {
-                CheckValidEmail(account.Email);
+                CheckValidEmail(clientRequest.Email);
 
                 // Check account in database
                 var existAccount = await _unitOfWork.GetAccountRepository()
-                    .GetOneAsync(acc => acc.Email.ToLower().Equals(account.Email.ToLower()), false);
+                    .GetOneAsync(acc => acc.Email.ToLower().Equals(clientRequest.Email.ToLower()), false);
 
                 if (existAccount is null)
                 { throw new UnauthorizedException("Tài khoản không tồn tại trong hệ thống."); }
 
                 //Hash Password
-                var securedPassword = HashStringSHA256(account.Password);
+                var securedPassword = HashStringSHA256(clientRequest.Password);
 
                 // If password not match
                 if (!securedPassword.Equals(existAccount.Password))
                 { throw new BadRequestException("Sai mật khẩu đăng nhập!"); }
 
-                account.Password = securedPassword;
-
                 // Authenticate with Firebase
-                var firebaseJwtToken = await _authenticationService.GetForCredentialsAsync(account);
+                var firebaseClaims = await _authenticationService.CreateFirebaseCustomTokenAsync(existAccount);
+                var firebaseJwtToken = await _authenticationService.FetchForJwtToken(firebaseClaims);
 
                 return (firebaseJwtToken, existAccount.Adapt<BM_AccountBaseInfo>());
             }
@@ -291,27 +290,6 @@ namespace Chillgo.BusinessService.Services
                 builder.Append(bytes[i].ToString("x2"));
             }
             return builder.ToString();
-        }
-
-        private async Task<string> FirebaseRegisterAccount(BM_Account newAccount)
-        {
-            try
-            {
-                UserRecordArgs firebaseUser = new UserRecordArgs
-                {
-                    Email = newAccount.Email,
-                    Password = newAccount.Password,
-                    DisplayName = newAccount.FullName
-                };
-
-                UserRecord userRecord = await FirebaseAuth.DefaultInstance.CreateUserAsync(firebaseUser);
-
-                return userRecord.Uid;
-            }
-            catch (FirebaseAuthException firebaseEx)
-            {
-                throw new BadRequestException("Đã có lỗi ở hàm FirebaseRegisterAccount: " + firebaseEx.Message);
-            }
         }
 
         private static void CheckValidEmail(string email)

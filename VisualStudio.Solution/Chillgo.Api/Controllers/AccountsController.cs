@@ -21,7 +21,7 @@ namespace Chillgo.Api.Controllers
         }
 
         //=================================[ Endpoints ]================================
-        [Authorize]
+        [Authorize(Roles = "Admin, Nhân Viên Quản Lý")]
         [HttpGet("statistical")]
         public async Task<IActionResult> TestConnect()
         {
@@ -46,6 +46,7 @@ namespace Chillgo.Api.Controllers
 
             return Ok(accList);
         }
+
         //----------------------------------------------------------------------------
 
         [AllowAnonymous]

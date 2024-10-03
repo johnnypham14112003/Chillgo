@@ -24,6 +24,9 @@ using System.Security.Claims;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.EntityFrameworkCore.Query.Internal;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Configuration;
+using static System.Net.WebRequestMethods;
+using System.Text.Json;
 
 
 namespace Chillgo.Api
@@ -43,7 +46,7 @@ namespace Chillgo.Api
             services.ConfigFluentEmail(configuration);
             services.AddRazorTemplating();
             services.ConfigFirebase(env);
-            services.IntergrateJwtFirebase(configuration);
+            services.IntergrateJwtFirebase(env);
 
             return services;
         }
@@ -127,23 +130,33 @@ namespace Chillgo.Api
             return services;
         }
 
-        private static IServiceCollection IntergrateJwtFirebase(this IServiceCollection services, IConfiguration configuration)
+        private static IServiceCollection IntergrateJwtFirebase(this IServiceCollection services, IWebHostEnvironment env)
         {
+            string solutionDirectory = Directory.GetParent(env.ContentRootPath).FullName;
+            string firebaseConfigPath = Path.Combine(solutionDirectory, "chillgo-firebase.json");
+
+            var firebaseConfig = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(System.IO.File.ReadAllText(firebaseConfigPath));
+            var firebaseSecret = firebaseConfig.GetProperty("firebase_secret");
+
+            string apiKey = firebaseSecret.GetProperty("api_key").GetString();
+            string projectId = firebaseSecret.GetProperty("project_id").GetString();
+
             services.AddHttpClient<IAuthenticationService, AuthenticationService>(httpClient =>
             {
-                httpClient.BaseAddress = new Uri(configuration["Authentication:TokenUri"]!);
+                //httpClient.BaseAddress = new Uri(configuration["Authentication:TokenUri"]!);
+                httpClient.BaseAddress = new Uri($"https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key={apiKey}");
             });
 
             services.AddAuthentication().AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, jwtOptions =>
             {
-                jwtOptions.Authority = configuration["Authentication:ValidIssuer"];
-                jwtOptions.Audience = configuration["Authentication:Audience"];
+                jwtOptions.Authority = $"https://securetoken.google.com/{projectId}";
+                jwtOptions.Audience = projectId;
                 jwtOptions.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
-                    ValidIssuer = configuration["Authentication:ValidIssuer"],
+                    ValidIssuer = $"https://securetoken.google.com/{projectId}",
                     ValidateAudience = true,
-                    ValidAudience = configuration["Authentication:Audience"],
+                    ValidAudience = projectId,
                     ValidateLifetime = true,
                     IssuerSigningKeyResolver = (token, securityToken, kid, validationParameters) =>
                     {
@@ -168,15 +181,24 @@ namespace Chillgo.Api
         }
         private static IServiceCollection ConfigFirebase(this IServiceCollection services, IWebHostEnvironment env)
         {
+            //string solutionDirectory = Path.GetFullPath(Path.Combine(env.ContentRootPath, ".."));
+
+            //string filePath = Path.Combine(solutionDirectory, "chillgo-firebase.json");
+
+            string solutionDirectory = Directory.GetParent(env.ContentRootPath).FullName;
+            string firebaseConfigPath = Path.Combine(solutionDirectory, "chillgo-firebase.json");
+
+            var firebaseConfig = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(System.IO.File.ReadAllText(firebaseConfigPath));
+            var firebaseSecret = firebaseConfig.GetProperty("firebase_secret");
+
             if (FirebaseApp.DefaultInstance == null)
             {
-                string solutionDirectory = Path.GetFullPath(Path.Combine(env.ContentRootPath, ".."));
-
-                string filePath = Path.Combine(solutionDirectory, "chillgo-firebase.json");
+                var credentialJson = System.Text.Json.JsonSerializer.Serialize(firebaseSecret);
 
                 FirebaseApp.Create(new AppOptions
                 {
-                    Credential = GoogleCredential.FromFile(filePath)
+                    Credential = GoogleCredential.FromJson(credentialJson)
+                    //Credential = GoogleCredential.FromFile(filePath)
                 });
             }
             return services;
