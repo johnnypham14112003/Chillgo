@@ -1,5 +1,7 @@
 ﻿using Chillgo.Repository.Interfaces;
 using Chillgo.Repository.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Chillgo.Repository.Repositories
 {
@@ -10,6 +12,9 @@ namespace Chillgo.Repository.Repositories
         {
             _context = context;
         }
+
+
+
         //=====================================================================
         //public async Task<Account?> GetAccountDetail(Guid id)
         //{
@@ -17,5 +22,77 @@ namespace Chillgo.Repository.Repositories
         //                                  .Include(x => x.StakeHolder)
         //                                  .SingleOrDefaultAsync(x => x.Id == id);
         //}
+
+        public async Task<int> SummaryTotalAccount(string whichType, bool byRole)
+        {
+            try
+            {
+                //If null => All account
+                if (whichType.ToLower().IsNullOrEmpty()) { return await _context.Accounts.AsNoTracking().CountAsync(); }
+
+                // Count by Role
+                if (byRole) { return await _context.Accounts.AsNoTracking().CountAsync(a => a.Role.ToLower().Equals(whichType.ToLower())); }
+
+                // Count by status
+                return await _context.Accounts.AsNoTracking().CountAsync(a => a.Status.ToLower().Equals(whichType.ToLower())); ;
+            }
+            catch (Exception)
+            {
+                return 0;
+            }
+        }
+        public async Task<(List<Account>? result, int totalCount)> GetAccountsListAsync
+            (string? keyword, string? gender, string? role, string? status, int pageIndex, int pageSize, bool nameDescendingOrder)
+        {
+            try
+            {
+                var query = _context.Accounts
+                    .AsNoTracking()
+                    .AsSplitQuery()
+                    .AsQueryable();
+
+                // Apply search
+                if (!string.IsNullOrEmpty(keyword))
+                {
+                    query = query.Where(acc => acc.Email.ToLower().Contains(keyword!.ToLower()));
+                    query = query.Where(acc => acc.FullName.ToLower().Contains(keyword!.ToLower()));
+                    query = query.Where(acc => acc.PhoneNumber.ToLower().Contains(keyword!.ToLower()));
+                    query = query.Where(acc => acc.Cccd.ToLower().Contains(keyword!.ToLower()));
+                }
+
+                if (!string.IsNullOrEmpty(gender))
+                {
+                    query = query.Where(acc => acc.Gender.ToLower().Equals(gender!.ToLower()));
+                }
+
+                if (!string.IsNullOrEmpty(role))
+                {
+                    query = query.Where(acc => acc.Role.ToLower().Equals(role!.ToLower()));
+                }
+
+                if (!string.IsNullOrEmpty(status))
+                {
+                    query = query.Where(acc => acc.Status.ToLower().Equals(status!.ToLower()));
+                }
+
+                // Sort by Name
+                query = nameDescendingOrder == true ?
+                    query.OrderByDescending(acc => acc.FullName) : query.OrderBy(acc => acc.FullName);
+
+                int count = query.Count();
+
+                // Apply paging
+                var pagedAccounts = await query
+                    .Skip((pageIndex - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                return (pagedAccounts, count);
+            }
+            catch (Exception)
+            {
+                return (null, 0);
+            }
+        }
     }
 }
