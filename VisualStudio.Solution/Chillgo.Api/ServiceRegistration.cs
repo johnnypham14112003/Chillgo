@@ -65,7 +65,7 @@ namespace Chillgo.Api
             services.AddScoped<IServiceFactory, ServiceFactory>();
             //---------------------------------------------------
             services.AddScoped<IAccountService, AccountService>();
-
+            services.AddScoped<ILocationService, LocationService>();
             //Add other BusinessServices here...
 
             return services;
@@ -77,7 +77,7 @@ namespace Chillgo.Api
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             //---------------------------------------------------------------------------
             services.AddScoped<IAccountRepository, AccountRepository>();
-
+            services.AddScoped<ILocationRepository, LocationRepository>();
             //Add other repository here...
 
             return services;

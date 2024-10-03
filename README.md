@@ -18,3 +18,4 @@ This Chillgo API is the main source code to run on localhost and is the base API
 
 - Pham Huy Hoang
 - Nguyen Xuan Quang
+- Vu Van Hai
