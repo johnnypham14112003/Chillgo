@@ -1,4 +1,5 @@
-﻿using Chillgo.Repository.Models;
+﻿using Chillgo.BusinessService.SharedDTOs;
+using Chillgo.Repository.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,5 +11,6 @@ namespace Chillgo.BusinessService.Interfaces
     public interface IConversationService
     {
         Task<Conversation> CreateConversation(Guid firstAccountId, Guid secondAccountId, string firstName, string secondName, Guid? aiBotId = null);
+        Task<List<ConversationDto>> GetAllConversationsAsync();
     }
 }

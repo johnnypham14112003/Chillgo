@@ -15,6 +15,13 @@ namespace Chillgo.Api.Controllers
             _conversationService = conversationService;
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetAllConversations()
+        {
+            var conversations = await _conversationService.GetAllConversationsAsync();
+            return Ok(conversations);
+        }
+
         [HttpPost]
         public async Task<IActionResult> CreateConversation([FromBody] CreateConversationRequest request)
         {
@@ -28,5 +35,6 @@ namespace Chillgo.Api.Controllers
             return Ok(conversation);
         }
 
+        
     }
 }

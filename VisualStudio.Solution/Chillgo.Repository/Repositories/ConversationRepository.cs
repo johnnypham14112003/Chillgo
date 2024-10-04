@@ -10,7 +10,10 @@ namespace Chillgo.Repository.Repositories
 {
     public class ConversationRepository : GenericRepository<Conversation>, IConversationRepository
     {
-        public ConversationRepository(ChillgoDbContext context) : base(context) { }
-        //
+        private readonly ChillgoDbContext _context;
+        public ConversationRepository(ChillgoDbContext context) : base(context)
+        {
+            _context = context;
+        }
     }
 }

@@ -1,4 +1,6 @@
-﻿using Chillgo.BusinessService.Interfaces;
+﻿using AutoMapper;
+using Chillgo.BusinessService.Interfaces;
+using Chillgo.BusinessService.SharedDTOs;
 using Chillgo.Repository.Interfaces;
 using Chillgo.Repository.Models;
 using System;
@@ -12,10 +14,18 @@ namespace Chillgo.BusinessService.Services
     public class ConversationService : IConversationService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
 
-        public ConversationService(IUnitOfWork unitOfWork)
+        public ConversationService(IUnitOfWork unitOfWork, IMapper mapper)
         {
             _unitOfWork = unitOfWork;
+            _mapper = mapper;
+        }
+
+        public async Task<List<ConversationDto>> GetAllConversationsAsync()
+        {
+            var conversations = await _unitOfWork.ConversationRepository.GetListAsync(c => true);
+            return _mapper.Map<List<ConversationDto>>(conversations);
         }
 
         public async Task<Conversation> CreateConversation(Guid firstAccountId, Guid secondAccountId, string firstName, string secondName, Guid? aiBotId = null)
@@ -56,6 +66,5 @@ namespace Chillgo.BusinessService.Services
 
             return conversation;
         }
-
     }
 }
