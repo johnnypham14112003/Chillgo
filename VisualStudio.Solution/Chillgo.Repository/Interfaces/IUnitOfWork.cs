@@ -5,5 +5,9 @@
         Task<int> SaveChangesAsync();
 
         IAccountRepository GetAccountRepository();
+
+        IConversationRepository ConversationRepository { get; }
+
+        IMessageRepository MessageRepository { get; }
     }
 }
