@@ -38,5 +38,17 @@ namespace Chillgo.BusinessService.Services
             await _unitOfWork.SaveChangesAsync();
             return message;
         }
+
+        public async Task DeleteMessageByIdAsync(Guid messageId)
+        {
+            var message = await _unitOfWork.MessageRepository.GetByIdAsync(messageId);
+            if (message == null)
+            {
+                throw new KeyNotFoundException("Message không tìm thấy");
+            }
+
+            await _unitOfWork.MessageRepository.DeleteAsync(message);
+            await _unitOfWork.SaveChangesAsync();
+        }
     }
 }
