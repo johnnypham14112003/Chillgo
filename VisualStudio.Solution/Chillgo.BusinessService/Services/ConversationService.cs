@@ -116,5 +116,25 @@ namespace Chillgo.BusinessService.Services
 
             return conversation;
         }
+
+        public async Task DeleteConversationByIdAsync(Guid conversationId)
+        {
+            var conversation = await _unitOfWork.ConversationRepository.GetByIdAsync(conversationId);
+            if (conversation == null)
+            {
+                throw new KeyNotFoundException("Conversation không tìm thấy");
+            }
+
+            // Retrieve and delete all related messages
+            var messages = await _unitOfWork.MessageRepository.GetListAsync(m => m.ConversationId == conversationId);
+            if (messages.Any())
+            {
+                await _unitOfWork.MessageRepository.DeleteRangeAsync(messages);
+            }
+
+            // Delete the conversation itself
+            await _unitOfWork.ConversationRepository.DeleteAsync(conversation);
+            await _unitOfWork.SaveChangesAsync();
+        }
     }
 }

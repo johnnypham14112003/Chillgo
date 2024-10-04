@@ -55,5 +55,24 @@ namespace Chillgo.Api.Controllers
             );
             return Ok(conversation);
         }
+
+        [HttpDelete("{conversationId}")]
+        public async Task<IActionResult> DeleteConversationById(Guid conversationId)
+        {
+            if (conversationId == Guid.Empty)
+            {
+                return BadRequest("Conversation ID không hợp lệ");
+            }
+
+            try
+            {
+                await _conversationService.DeleteConversationByIdAsync(conversationId);
+                return NoContent(); // 204 No Content on successful deletion
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound("Conversation không tìm thấy");
+            }
+        }
     }
 }

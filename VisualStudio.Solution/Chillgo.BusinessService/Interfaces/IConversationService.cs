@@ -19,5 +19,7 @@ namespace Chillgo.BusinessService.Interfaces
         Task<List<ConversationDto>> GetConversationsByAccountIdAsync(Guid accountId);
 
         Task<PaginatedMessagesDto> GetMessagesByConversationIdAsync(Guid conversationId, int page, int pageSize, string orderBy, string orderDirection);
+
+        Task DeleteConversationByIdAsync(Guid conversationId);
     }
 }
