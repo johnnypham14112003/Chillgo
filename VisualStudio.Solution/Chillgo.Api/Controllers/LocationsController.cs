@@ -17,7 +17,7 @@ namespace Chillgo.Api.Controllers
         }
 
         // API lấy 5 địa điểm nổi nhất
-        [HttpGet("Top5")]
+        [HttpGet("top-5")]
         public ActionResult<List<Location>> GetTop5Locations()
         {
             var locations = _locationService.GetTop5Locations();
@@ -25,7 +25,7 @@ namespace Chillgo.Api.Controllers
         }
 
         // API lấy 5 địa điểm ngẫu nhiên
-        [HttpGet("Random5Location")]
+        [HttpGet("random-5-location")]
         public ActionResult<List<Location>> GetRandom5Locations()
         {
             var locations = _locationService.GetRandom5Locations();
@@ -33,7 +33,7 @@ namespace Chillgo.Api.Controllers
         }
 
         // API lấy danh sách đã sort và phân trang
-        [HttpGet("SortedLocations")]
+        [HttpGet("sorted-locations")]
         public ActionResult<List<Location>> GetSortedLocations(string sortColumn = "Name", int page = 1, int pageSize = 10)
         {
             var locations = _locationService.GetSortedLocations(sortColumn, page, pageSize);

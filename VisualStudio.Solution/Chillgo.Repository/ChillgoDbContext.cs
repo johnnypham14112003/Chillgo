@@ -14,7 +14,6 @@ public class ChillgoDbContext : DbContext
     {
     }
 
-
     public DbSet<Account> Accounts { get; set; }
 
     public  DbSet<Blog> Blogs { get; set; }

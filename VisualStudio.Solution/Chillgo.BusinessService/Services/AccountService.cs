@@ -81,7 +81,7 @@ namespace Chillgo.BusinessService.Services
 
         public async Task<bool> CreateAccountAsync(BM_Account AccountFromClient)
         {
-            bool saveResult=false;
+            bool createdFirebase = false, saveResult=false;
             string firebaseUid="";
 
             try
@@ -108,6 +108,7 @@ namespace Chillgo.BusinessService.Services
 
                 //Register account to Firebase and get FirebaseUid
                 firebaseUid = await _authenticationService.FirebaseRegisterAccount(AccountFromClient);
+                createdFirebase = !string.IsNullOrEmpty(firebaseUid);
 
                 // if exist by deleted => recorver
                 if (existAcc is not null && DeletedChecker(existAcc.Status))
@@ -116,9 +117,6 @@ namespace Chillgo.BusinessService.Services
                     existAcc.FirebaseUid = firebaseUid;
 
                     saveResult = await _unitOfWork.GetAccountRepository().SaveChangeAsync();
-
-                    //Rollback Firebase creation if save in DB failed!
-                    if (saveResult == false) await FirebaseAuth.DefaultInstance.DeleteUserAsync(firebaseUid);
 
                     return saveResult;
                 }
@@ -138,8 +136,7 @@ namespace Chillgo.BusinessService.Services
             catch (Exception ex)
             {
                 //Rollback Firebase user creation if save in DB failed!
-                if (saveResult == false) await FirebaseAuth.DefaultInstance.DeleteUserAsync(firebaseUid);
-                //await FirebaseAuth.DefaultInstance.DeleteUserAsync(firebaseUid);
+                if (createdFirebase && saveResult == false) await FirebaseAuth.DefaultInstance.DeleteUserAsync(firebaseUid);
                 throw new BadRequestException("Đã có lỗi ở hàm CreateAccountAsync: " + ex.Message);
             }
         }

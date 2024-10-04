@@ -20,6 +20,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+else
+{
+    app.UseHsts(); // Tun on HSTS in environment Production
+}
+
+app.UseResponseCaching();
 
 // Allow all http
 app.UseCors("AllowAll");
