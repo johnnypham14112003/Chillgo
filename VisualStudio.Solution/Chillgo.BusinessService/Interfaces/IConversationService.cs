@@ -15,5 +15,7 @@ namespace Chillgo.BusinessService.Interfaces
         Task<List<ConversationDto>> GetAllConversationsAsync();
 
         Task<ConversationDto> GetConversationByIdAsync(Guid conversationId);
+
+        Task<List<ConversationDto>> GetConversationsByAccountIdAsync(Guid accountId);
     }
 }

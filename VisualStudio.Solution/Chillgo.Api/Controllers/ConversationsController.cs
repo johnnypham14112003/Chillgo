@@ -29,6 +29,13 @@ namespace Chillgo.Api.Controllers
             return Ok(conversation);
         }
 
+        [HttpGet("by-account/{accountId}")]
+        public async Task<IActionResult> GetConversationsByAccountId(Guid accountId)
+        {
+            var conversations = await _conversationService.GetConversationsByAccountIdAsync(accountId);
+            return Ok(conversations);
+        }
+
         [HttpPost]
         public async Task<IActionResult> CreateConversation([FromBody] CreateConversationRequest request)
         {

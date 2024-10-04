@@ -38,6 +38,14 @@ namespace Chillgo.BusinessService.Services
             return _mapper.Map<ConversationDto>(conversation);
         }
 
+        public async Task<List<ConversationDto>> GetConversationsByAccountIdAsync(Guid accountId)
+        {
+            var conversations = await _unitOfWork.ConversationRepository
+                .GetListAsync(c => c.FirstAccountId == accountId || c.SecondAccountId == accountId);
+
+            return _mapper.Map<List<ConversationDto>>(conversations);
+        }
+
         public async Task<Conversation> CreateConversation(Guid firstAccountId, Guid secondAccountId, string firstName, string secondName, Guid? aiBotId = null)
         {
             var conversation = new Conversation
