@@ -36,6 +36,13 @@ namespace Chillgo.Api.Controllers
             return Ok(conversations);
         }
 
+        [HttpGet("{conversationId}/messages")]
+        public async Task<IActionResult> GetMessagesByConversationId(Guid conversationId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string orderBy = "sentTime", [FromQuery] string orderDirection = "desc")
+        {
+            var messages = await _conversationService.GetMessagesByConversationIdAsync(conversationId, page, pageSize, orderBy, orderDirection);
+            return Ok(messages);
+        }
+
         [HttpPost]
         public async Task<IActionResult> CreateConversation([FromBody] CreateConversationRequest request)
         {

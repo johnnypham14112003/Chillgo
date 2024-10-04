@@ -15,6 +15,9 @@ namespace Chillgo.BusinessService
         {
             // Create map from the entity to the DTO
             CreateMap<Conversation, ConversationDto>();
+
+            CreateMap<Message, MessageDto>()
+                .ForMember(dest => dest.SenderName, opt => opt.MapFrom(src => src.Sender.FullName)); // Assuming Sender has FullName property
         }
     }
 }
