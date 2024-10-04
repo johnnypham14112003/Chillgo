@@ -11,6 +11,9 @@ namespace Chillgo.BusinessService.Interfaces
     public interface IConversationService
     {
         Task<Conversation> CreateConversation(Guid firstAccountId, Guid secondAccountId, string firstName, string secondName, Guid? aiBotId = null);
+
         Task<List<ConversationDto>> GetAllConversationsAsync();
+
+        Task<ConversationDto> GetConversationByIdAsync(Guid conversationId);
     }
 }
