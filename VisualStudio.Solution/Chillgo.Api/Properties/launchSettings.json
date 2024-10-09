@@ -4,29 +4,29 @@
       "commandName": "Project",
       "launchBrowser": true,
       "launchUrl": "swagger",
-        "environmentVariables": {
-            "ASPNETCORE_ENVIRONMENT": "Production"
-        },
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Production"
+      },
       "dotnetRunMessages": true,
-      "applicationUrl": "http://*:80"
+      "applicationUrl": "http://103.37.61.106:50"
     },
     "https": {
-        "commandName": "Project",
-        "launchBrowser": true,
-        "launchUrl": "swagger",
-        "environmentVariables": {
-            "ASPNETCORE_ENVIRONMENT": "Production"
-        },
-        "dotnetRunMessages": true,
-        "applicationUrl": "https://*:80;http://*:50"
+      "commandName": "Project",
+      "launchBrowser": true,
+      "launchUrl": "swagger",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Production"
+      },
+      "dotnetRunMessages": true,
+      "applicationUrl": "https://103.37.61.106:80;https://chillgo.travel:80;http://103.37.61.106:50"
     },
     "IIS Express": {
       "commandName": "IISExpress",
       "launchBrowser": true,
       "launchUrl": "swagger",
-        "environmentVariables": {
-            "ASPNETCORE_ENVIRONMENT": "Production"
-        }
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Production"
+      }
     },
     "Container (Dockerfile)": {
       "commandName": "Docker",
@@ -45,7 +45,7 @@
     "windowsAuthentication": false,
     "anonymousAuthentication": true,
     "iisExpress": {
-      "applicationUrl": "http://localhost:54244",
+      "applicationUrl": "https://103.37.61.106:81;https://chillgo.travel:81",
       "sslPort": 44329
     }
   }

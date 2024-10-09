@@ -81,8 +81,8 @@ namespace Chillgo.BusinessService.Services
 
         public async Task<bool> CreateAccountAsync(BM_Account AccountFromClient)
         {
-            bool createdFirebase = false, saveResult=false;
-            string firebaseUid="";
+            bool createdFirebase = false, saveResult = false;
+            string firebaseUid = "";
 
             try
             {
@@ -97,7 +97,7 @@ namespace Chillgo.BusinessService.Services
 
                 var existAcc = await _unitOfWork.GetAccountRepository().GetOneAsync(acc =>
                 acc.Email.ToLower().Equals(AccountFromClient.Email.ToLower()));
-                
+
                 // Validate exist - No deleted
                 if (existAcc is not null && !DeletedChecker(existAcc.Status))
                 { throw new ConflictException("Tài khoản Email này đã tồn tại trong hệ thống"); }
