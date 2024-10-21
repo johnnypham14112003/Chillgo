@@ -72,6 +72,18 @@ namespace Chillgo.Repository.Repositories
         }
 
 
+        // Lấy thông tin địa điểm theo ID
+        public Location GetLocationById(Guid id)
+        {
+            return _dbContext.Locations.FirstOrDefault(x => x.Id == id);
+        }
+
+
+        public List<Location> GetAllLocations()
+        {
+            return _dbContext.Locations.ToList();
+        }
+
 
 
     }
