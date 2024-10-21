@@ -13,8 +13,6 @@ namespace Chillgo.Repository.Repositories
             _context = context;
         }
 
-
-
         //=====================================================================
         //public async Task<Account?> GetAccountDetail(Guid id)
         //{
@@ -54,10 +52,11 @@ namespace Chillgo.Repository.Repositories
                 // Apply search
                 if (!string.IsNullOrEmpty(keyword))
                 {
-                    query = query.Where(acc => acc.Email.ToLower().Contains(keyword!.ToLower()));
-                    query = query.Where(acc => acc.FullName.ToLower().Contains(keyword!.ToLower()));
-                    query = query.Where(acc => acc.PhoneNumber.ToLower().Contains(keyword!.ToLower()));
-                    query = query.Where(acc => acc.Cccd.ToLower().Contains(keyword!.ToLower()));
+                    query = query.Where(acc =>
+                    (acc.Email.ToLower().Contains(keyword.ToLower())) ||
+                    (acc.FullName.ToLower().Contains(keyword.ToLower())) ||
+                    (acc.PhoneNumber.ToLower().Contains(keyword.ToLower())) ||
+                    (acc.Cccd.ToLower().Contains(keyword.ToLower())));
                 }
 
                 if (!string.IsNullOrEmpty(gender))
