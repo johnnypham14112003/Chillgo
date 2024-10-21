@@ -14,6 +14,7 @@ namespace Chillgo.Repository.Interfaces
         List<Location> GetRandom5Locations();
         List<Location> GetSortedLocations(string sortColumn, int page, int pageSize);
 
-       
+        Location GetLocationById(Guid id);
+        List<Location> GetAllLocations();
     }
 }

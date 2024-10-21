@@ -39,5 +39,28 @@ namespace Chillgo.Api.Controllers
             var locations = _locationService.GetSortedLocations(sortColumn, page, pageSize);
             return Ok(locations);
         }
+
+        // API lấy thông tin chi tiết của 1 địa điểm
+        [HttpGet("{id}")]
+        public ActionResult<Location> GetLocationById(Guid id)
+        {
+            var location = _locationService.GetLocationById(id);
+            if (location == null)
+            {
+                return NotFound();
+            }
+            return Ok(location);
+        }
+
+        [HttpGet("AllLocations")]
+        public ActionResult<List<Location>> GetAllLocations()
+        {
+            var locations = _locationService.GetAllLocations();
+            return Ok(locations);
+        }
+
+
+
+
     }
 }

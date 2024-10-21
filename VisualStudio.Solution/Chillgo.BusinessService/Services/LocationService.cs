@@ -32,5 +32,17 @@ namespace Chillgo.BusinessService.Services
         {
             return _locationRepository.GetSortedLocations(sortColumn, page, pageSize);
         }
+
+        public Location GetLocationById(Guid id)
+        {
+            return _locationRepository.GetLocationById(id);
+        }
+
+        public List<Location> GetAllLocations()
+        {
+            return _locationRepository.GetAllLocations();
+        }
+
+
     }
 }
