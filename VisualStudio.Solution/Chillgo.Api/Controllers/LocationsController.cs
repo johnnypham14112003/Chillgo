@@ -1,5 +1,6 @@
 ﻿using Chillgo.BusinessService.Interfaces;
 using Chillgo.Repository.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 
@@ -17,7 +18,8 @@ namespace Chillgo.Api.Controllers
         }
 
         // API lấy 5 địa điểm nổi nhất
-        [HttpGet("top-5")]
+        [Authorize]
+        [HttpGet("Top5")]
         public ActionResult<List<Location>> GetTop5Locations()
         {
             var locations = _locationService.GetTop5Locations();
@@ -25,7 +27,8 @@ namespace Chillgo.Api.Controllers
         }
 
         // API lấy 5 địa điểm ngẫu nhiên
-        [HttpGet("random-5-location")]
+        [Authorize]
+        [HttpGet("Random5Location")]
         public ActionResult<List<Location>> GetRandom5Locations()
         {
             var locations = _locationService.GetRandom5Locations();
@@ -33,11 +36,37 @@ namespace Chillgo.Api.Controllers
         }
 
         // API lấy danh sách đã sort và phân trang
-        [HttpGet("sorted-locations")]
+        [Authorize]
+        [HttpGet("SortedLocations")]
         public ActionResult<List<Location>> GetSortedLocations(string sortColumn = "Name", int page = 1, int pageSize = 10)
         {
             var locations = _locationService.GetSortedLocations(sortColumn, page, pageSize);
             return Ok(locations);
         }
+
+        // API lấy thông tin chi tiết của 1 địa điểm
+        [Authorize]
+        [HttpGet("{id}")]
+        public ActionResult<Location> GetLocationById(Guid id)
+        {
+            var location = _locationService.GetLocationById(id);
+            if (location == null)
+            {
+                return NotFound();
+            }
+            return Ok(location);
+        }
+
+        [Authorize]
+        [HttpGet("AllLocations")]
+        public ActionResult<List<Location>> GetAllLocations()
+        {
+            var locations = _locationService.GetAllLocations();
+            return Ok(locations);
+        }
+
+
+
+
     }
 }

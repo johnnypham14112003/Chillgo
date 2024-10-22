@@ -1,10 +1,16 @@
 using Chillgo.Api;
 using Chillgo.Api.Middlewares;
+using System.Text.Json.Serialization;
+using AutoMapper;
+using Chillgo.BusinessService;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.DependencyInjectionServices(builder.Configuration, builder.Environment);
+
+// Add AutoMapper service and register the MappingProfile
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 builder.Services.AddControllers()
     .AddNewtonsoftJson(options => options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);

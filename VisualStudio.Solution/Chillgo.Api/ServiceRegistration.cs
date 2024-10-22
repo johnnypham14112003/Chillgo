@@ -66,6 +66,8 @@ namespace Chillgo.Api
             //---------------------------------------------------
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<ILocationService, LocationService>();
+            services.AddScoped<IConversationService, ConversationService>();
+            services.AddScoped<IMessageService, MessageService>();
             //Add other BusinessServices here...
 
             return services;
@@ -78,6 +80,8 @@ namespace Chillgo.Api
             //---------------------------------------------------------------------------
             services.AddScoped<IAccountRepository, AccountRepository>();
             services.AddScoped<ILocationRepository, LocationRepository>();
+            services.AddScoped<IConversationRepository, ConversationRepository>();
+            services.AddScoped<IMessageRepository, MessageRepository>();
             //Add other repository here...
 
             return services;
