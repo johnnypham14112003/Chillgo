@@ -1,6 +1,7 @@
 ﻿using Chillgo.Api.Models.Request;
 using Chillgo.BusinessService.Interfaces;
 using Chillgo.Repository.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Chillgo.Api.Controllers
@@ -16,6 +17,7 @@ namespace Chillgo.Api.Controllers
             _messageService = messageService;
         }
 
+        [Authorize]
         [HttpPost("create")]
         public async Task<IActionResult> CreateMessage([FromBody] CreateMessageRequest request)
         {
@@ -37,6 +39,7 @@ namespace Chillgo.Api.Controllers
             return Ok(createdMessage);
         }
 
+        [Authorize]
         [HttpPut("update-status")]
         public async Task<IActionResult> UpdateMessageStatus(Guid messageId, [FromBody] string status)
         {
@@ -56,6 +59,7 @@ namespace Chillgo.Api.Controllers
             }
         }
 
+        [Authorize]
         [HttpDelete("{messageId}")]
         public async Task<IActionResult> DeleteMessageById(Guid messageId)
         {

@@ -1,5 +1,6 @@
 ﻿using Chillgo.Api.Models.Request;
 using Chillgo.BusinessService.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Chillgo.Api.Controllers
@@ -15,6 +16,7 @@ namespace Chillgo.Api.Controllers
             _conversationService = conversationService;
         }
 
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetAllConversations()
         {
@@ -22,6 +24,7 @@ namespace Chillgo.Api.Controllers
             return Ok(conversations);
         }
 
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetConversationById(Guid id)
         {
@@ -29,6 +32,7 @@ namespace Chillgo.Api.Controllers
             return Ok(conversation);
         }
 
+        [Authorize]
         [HttpGet("by-account/{accountId}")]
         public async Task<IActionResult> GetConversationsByAccountId(Guid accountId)
         {
@@ -36,6 +40,7 @@ namespace Chillgo.Api.Controllers
             return Ok(conversations);
         }
 
+        [Authorize]
         [HttpGet("{conversationId}/messages")]
         public async Task<IActionResult> GetMessagesByConversationId(Guid conversationId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string orderBy = "sentTime", [FromQuery] string orderDirection = "desc")
         {
@@ -43,6 +48,7 @@ namespace Chillgo.Api.Controllers
             return Ok(messages);
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> CreateConversation([FromBody] CreateConversationRequest request)
         {
@@ -56,6 +62,7 @@ namespace Chillgo.Api.Controllers
             return Ok(conversation);
         }
 
+        [Authorize]
         [HttpDelete("{conversationId}")]
         public async Task<IActionResult> DeleteConversationById(Guid conversationId)
         {
