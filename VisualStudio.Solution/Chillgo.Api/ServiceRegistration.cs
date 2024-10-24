@@ -68,6 +68,8 @@ namespace Chillgo.Api
             services.AddScoped<ILocationService, LocationService>();
             services.AddScoped<IConversationService, ConversationService>();
             services.AddScoped<IMessageService, MessageService>();
+            services.AddScoped<IPackageTransactionService, PackageTransactionService>();
+            
             //Add other BusinessServices here...
 
             return services;
@@ -82,6 +84,8 @@ namespace Chillgo.Api
             services.AddScoped<ILocationRepository, LocationRepository>();
             services.AddScoped<IConversationRepository, ConversationRepository>();
             services.AddScoped<IMessageRepository, MessageRepository>();
+            services.AddScoped<IPackageTransactionRepository, PackageTransactionRepository>();
+            
             //Add other repository here...
 
             return services;
