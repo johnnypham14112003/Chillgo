@@ -81,7 +81,8 @@ namespace Chillgo.BusinessService.Services
 
         public async Task<bool> CreateAccountAsync(BM_Account AccountFromClient)
         {
-            bool createdFirebase = false, saveResult = false;
+            bool saveResult = false;
+            bool isFirebaseTriggered = false;
             string firebaseUid = "";
 
             try
@@ -108,7 +109,7 @@ namespace Chillgo.BusinessService.Services
 
                 //Register account to Firebase and get FirebaseUid
                 firebaseUid = await _authenticationService.FirebaseRegisterAccount(AccountFromClient);
-                createdFirebase = !string.IsNullOrEmpty(firebaseUid);
+                isFirebaseTriggered = true;
 
                 // if exist by deleted => recorver
                 if (existAcc is not null && DeletedChecker(existAcc.Status))
@@ -117,6 +118,9 @@ namespace Chillgo.BusinessService.Services
                     existAcc.FirebaseUid = firebaseUid;
 
                     saveResult = await _unitOfWork.GetAccountRepository().SaveChangeAsync();
+
+                    //Rollback Firebase creation if save in DB failed!
+                    if (saveResult == false && isFirebaseTriggered) await FirebaseAuth.DefaultInstance.DeleteUserAsync(firebaseUid);
 
                     return saveResult;
                 }
@@ -136,7 +140,8 @@ namespace Chillgo.BusinessService.Services
             catch (Exception ex)
             {
                 //Rollback Firebase user creation if save in DB failed!
-                if (createdFirebase && saveResult == false) await FirebaseAuth.DefaultInstance.DeleteUserAsync(firebaseUid);
+                if (saveResult == false && isFirebaseTriggered) await FirebaseAuth.DefaultInstance.DeleteUserAsync(firebaseUid);
+                //await FirebaseAuth.DefaultInstance.DeleteUserAsync(firebaseUid);
                 throw new BadRequestException("Đã có lỗi ở hàm CreateAccountAsync: " + ex.Message);
             }
         }
@@ -165,7 +170,13 @@ namespace Chillgo.BusinessService.Services
                 var firebaseClaims = await _authenticationService.CreateFirebaseCustomTokenAsync(existAccount);
                 var firebaseJwtToken = await _authenticationService.FetchForJwtToken(firebaseClaims);
 
-                return (firebaseJwtToken, existAccount.Adapt<BM_AccountBaseInfo>());
+                //Query image avatar
+                var ImageObj = await _unitOfWork.GetImageRepository().GetOneAsync(img => img.AccountId == existAccount.Id);
+
+                var responseAccount = existAccount.Adapt<BM_AccountBaseInfo>();
+                responseAccount.AvatarUrl = ImageObj is null ? "" : ImageObj.UrlPath;
+
+                return (firebaseJwtToken, responseAccount);
             }
             catch (FirebaseAuthException firebaseEx)
             { throw new BadRequestException($"Firebase authentication failed: {firebaseEx.Message}"); }
@@ -313,7 +324,7 @@ namespace Chillgo.BusinessService.Services
             throw new NotImplementedException();
         }
 
-        
+
 
         public Task<bool> BanAccount(Guid accountId)
         {

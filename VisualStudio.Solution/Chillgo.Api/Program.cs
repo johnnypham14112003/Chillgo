@@ -1,7 +1,5 @@
 using Chillgo.Api;
 using Chillgo.Api.Middlewares;
-using System.Text.Json.Serialization;
-using AutoMapper;
 using Chillgo.BusinessService;
 
 var builder = WebApplication.CreateBuilder(args);

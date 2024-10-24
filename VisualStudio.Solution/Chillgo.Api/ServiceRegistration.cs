@@ -5,28 +5,18 @@ using Chillgo.Repository.Interfaces;
 using Chillgo.Repository.Repositories;
 using Chillgo.BusinessService.Extensions;
 
-using Mapster;
 using System.Text;
+using System.Text.Json;
+using System.Security.Cryptography.X509Certificates;
 
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
+using Newtonsoft.Json.Serialization;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-
-using Newtonsoft.Json.Serialization;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
-using System.Security.Cryptography.X509Certificates;
-using System.Security.Claims;
-using Microsoft.IdentityModel.JsonWebTokens;
-using Microsoft.EntityFrameworkCore.Query.Internal;
-using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Configuration;
-using static System.Net.WebRequestMethods;
-using System.Text.Json;
 
 
 namespace Chillgo.Api
@@ -43,8 +33,6 @@ namespace Chillgo.Api
             services.ConfigKebabCase();
 
             //Third Party Services
-            services.ConfigFluentEmail(configuration);
-            services.AddRazorTemplating();
             services.ConfigFirebase(env);
             services.IntergrateJwtFirebase(env);
 
@@ -68,6 +56,7 @@ namespace Chillgo.Api
             services.AddScoped<ILocationService, LocationService>();
             services.AddScoped<IConversationService, ConversationService>();
             services.AddScoped<IMessageService, MessageService>();
+            services.AddScoped<IFirebaseStorageService, FirebaseStorageService>();
             //Add other BusinessServices here...
 
             return services;
@@ -82,6 +71,7 @@ namespace Chillgo.Api
             services.AddScoped<ILocationRepository, LocationRepository>();
             services.AddScoped<IConversationRepository, ConversationRepository>();
             services.AddScoped<IMessageRepository, MessageRepository>();
+            services.AddScoped<IImageRepository, ImageRepository>();
             //Add other repository here...
 
             return services;
@@ -115,19 +105,6 @@ namespace Chillgo.Api
             return services;
         }
 
-        private static IServiceCollection ConfigFluentEmail(this IServiceCollection services, IConfiguration configuration)
-        {
-            string defaultFromEmail = configuration["FluentEmail:Email"]!;
-            string host = configuration["FluentEmail:Host"]!;
-            int port = int.Parse(configuration["FluentEmail:Port"]!);
-            string username = configuration["FluentEmail:Email"]!;
-            string password = configuration["FluentEmail:Password"]!;
-
-            services.AddFluentEmail(defaultFromEmail)
-                    .AddSmtpSender(host, port, username, password);
-            return services;
-        }
-
         private static IServiceCollection ConfigCORS(this IServiceCollection services)
         {
             services.AddCors(options => options.AddPolicy("AllowAll", b => b.AllowAnyHeader().AllowAnyOrigin().AllowAnyMethod()));
@@ -136,6 +113,7 @@ namespace Chillgo.Api
 
         private static IServiceCollection IntergrateJwtFirebase(this IServiceCollection services, IWebHostEnvironment env)
         {
+            //Read attributes from Firebase secret file
             string solutionDirectory = Directory.GetParent(env.ContentRootPath).FullName;
             string firebaseConfigPath = Path.Combine(solutionDirectory, "chillgo-firebase.json");
 
@@ -185,10 +163,6 @@ namespace Chillgo.Api
         }
         private static IServiceCollection ConfigFirebase(this IServiceCollection services, IWebHostEnvironment env)
         {
-            //string solutionDirectory = Path.GetFullPath(Path.Combine(env.ContentRootPath, ".."));
-
-            //string filePath = Path.Combine(solutionDirectory, "chillgo-firebase.json");
-
             string solutionDirectory = Directory.GetParent(env.ContentRootPath).FullName;
             string firebaseConfigPath = Path.Combine(solutionDirectory, "chillgo-firebase.json");
 
@@ -199,12 +173,31 @@ namespace Chillgo.Api
             {
                 var credentialJson = System.Text.Json.JsonSerializer.Serialize(firebaseSecret);
 
+                //Old config for authen
+                //FirebaseApp.Create(new AppOptions
+                //{
+                //    Credential = GoogleCredential.FromJson(credentialJson)
+                //});
+
+                //New Config for Firebase storage
+                var credential = GoogleCredential.FromJson(credentialJson)
+                    .CreateScoped(new[]
+                    {
+                        "https://www.googleapis.com/auth/firebase.storage",
+                        "https://www.googleapis.com/auth/cloud-platform"
+                    });
+
                 FirebaseApp.Create(new AppOptions
                 {
-                    Credential = GoogleCredential.FromJson(credentialJson)
-                    //Credential = GoogleCredential.FromFile(filePath)
+                    Credential = credential
                 });
+                //---------------------------------
             }
+
+            //For Firebase storage
+            var bucketName = firebaseSecret.GetProperty("bucket").GetString();
+            services.AddSingleton(bucketName!);
+            //--------------------
             return services;
         }
     }
