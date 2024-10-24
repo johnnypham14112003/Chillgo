@@ -9,18 +9,17 @@ namespace Chillgo.Api.Controllers
     [Route("api/[controller]")]
     public class ConversationsController : Controller
     {
-        private readonly IConversationService _conversationService;
-
-        public ConversationsController(IConversationService conversationService)
+        private readonly IServiceFactory _serviceFactory;
+        public ConversationsController(IServiceFactory serviceFactory)
         {
-            _conversationService = conversationService;
+            _serviceFactory = serviceFactory;
         }
 
         [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetAllConversations()
         {
-            var conversations = await _conversationService.GetAllConversationsAsync();
+            var conversations = await _serviceFactory.GetConversationService().GetAllConversationsAsync();
             return Ok(conversations);
         }
 
@@ -28,7 +27,7 @@ namespace Chillgo.Api.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetConversationById(Guid id)
         {
-            var conversation = await _conversationService.GetConversationByIdAsync(id);
+            var conversation = await _serviceFactory.GetConversationService().GetConversationByIdAsync(id);
             return Ok(conversation);
         }
 
@@ -36,7 +35,7 @@ namespace Chillgo.Api.Controllers
         [HttpGet("by-account/{accountId}")]
         public async Task<IActionResult> GetConversationsByAccountId(Guid accountId)
         {
-            var conversations = await _conversationService.GetConversationsByAccountIdAsync(accountId);
+            var conversations = await _serviceFactory.GetConversationService().GetConversationsByAccountIdAsync(accountId);
             return Ok(conversations);
         }
 
@@ -44,7 +43,7 @@ namespace Chillgo.Api.Controllers
         [HttpGet("{conversationId}/messages")]
         public async Task<IActionResult> GetMessagesByConversationId(Guid conversationId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string orderBy = "sentTime", [FromQuery] string orderDirection = "desc")
         {
-            var messages = await _conversationService.GetMessagesByConversationIdAsync(conversationId, page, pageSize, orderBy, orderDirection);
+            var messages = await _serviceFactory.GetConversationService().GetMessagesByConversationIdAsync(conversationId, page, pageSize, orderBy, orderDirection);
             return Ok(messages);
         }
 
@@ -52,7 +51,7 @@ namespace Chillgo.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateConversation([FromBody] CreateConversationRequest request)
         {
-            var conversation = await _conversationService.CreateConversation(
+            var conversation = await _serviceFactory.GetConversationService().CreateConversation(
                 request.FirstAccountId,
                 request.SecondAccountId,
                 request.FirstName,
@@ -73,7 +72,7 @@ namespace Chillgo.Api.Controllers
 
             try
             {
-                await _conversationService.DeleteConversationByIdAsync(conversationId);
+                await _serviceFactory.GetConversationService().DeleteConversationByIdAsync(conversationId);
                 return NoContent(); // 204 No Content on successful deletion
             }
             catch (KeyNotFoundException)

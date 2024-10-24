@@ -5,28 +5,18 @@ using Chillgo.Repository.Interfaces;
 using Chillgo.Repository.Repositories;
 using Chillgo.BusinessService.Extensions;
 
-using Mapster;
 using System.Text;
+using System.Text.Json;
+using System.Security.Cryptography.X509Certificates;
 
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
+using Newtonsoft.Json.Serialization;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-
-using Newtonsoft.Json.Serialization;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
-using System.Security.Cryptography.X509Certificates;
-using System.Security.Claims;
-using Microsoft.IdentityModel.JsonWebTokens;
-using Microsoft.EntityFrameworkCore.Query.Internal;
-using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Configuration;
-using static System.Net.WebRequestMethods;
-using System.Text.Json;
 
 
 namespace Chillgo.Api

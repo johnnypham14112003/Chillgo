@@ -21,14 +21,14 @@ namespace Chillgo.BusinessService.Services
 
         public async Task<Message> CreateMessageAsync(Message message)
         {
-            await _unitOfWork.MessageRepository.AddAsync(message);
+            await _unitOfWork.GetMessageRepository().AddAsync(message);
             await _unitOfWork.SaveChangesAsync();
             return message;
         }
 
         public async Task<Message> UpdateMessageStatusAsync(Guid messageId, string status)
         {
-            var message = await _unitOfWork.MessageRepository.GetByIdAsync(messageId);
+            var message = await _unitOfWork.GetMessageRepository().GetByIdAsync(messageId);
             if (message == null)
             {
                 throw new KeyNotFoundException("Message không tìm thấy");
@@ -41,13 +41,13 @@ namespace Chillgo.BusinessService.Services
 
         public async Task DeleteMessageByIdAsync(Guid messageId)
         {
-            var message = await _unitOfWork.MessageRepository.GetByIdAsync(messageId);
+            var message = await _unitOfWork.GetMessageRepository().GetByIdAsync(messageId);
             if (message == null)
             {
                 throw new KeyNotFoundException("Message không tìm thấy");
             }
 
-            await _unitOfWork.MessageRepository.DeleteAsync(message);
+            await _unitOfWork.GetMessageRepository().DeleteAsync(message);
             await _unitOfWork.SaveChangesAsync();
         }
     }

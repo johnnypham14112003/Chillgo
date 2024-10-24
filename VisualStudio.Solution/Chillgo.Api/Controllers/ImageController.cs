@@ -4,7 +4,6 @@ using Chillgo.BusinessService.Interfaces;
 using Mapster;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Win32;
 
 namespace Chillgo.Api.Controllers
 {

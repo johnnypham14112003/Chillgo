@@ -1,6 +1,5 @@
 using Chillgo.BusinessService.Interfaces;
 using Chillgo.Repository.Interfaces;
-using Microsoft.Extensions.Configuration;
 using AutoMapper;
 
 namespace Chillgo.BusinessService.Services
