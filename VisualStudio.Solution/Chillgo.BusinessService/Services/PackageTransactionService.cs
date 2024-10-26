@@ -2,21 +2,16 @@
 using Chillgo.BusinessService.SharedDTOs;
 using Chillgo.Repository.Interfaces;
 using Chillgo.Repository.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Chillgo.BusinessService.Services
 {
     public class PackageTransactionService : IPackageTransactionService
     {
-        private readonly IPackageTransactionRepository _transactionRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public PackageTransactionService(IPackageTransactionRepository transactionRepository)
+        public PackageTransactionService(IUnitOfWork unitOfWork)
         {
-            _transactionRepository = transactionRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<Guid> CreateTransaction(CreatePackageTransactionDto transactionDto)
@@ -36,7 +31,7 @@ namespace Chillgo.BusinessService.Services
                 Status = transactionDto.Status
             };
 
-            await _transactionRepository.AddTransactionAsync(transaction);
+            await _unitOfWork.GetPackageTransactionRepository().AddTransactionAsync(transaction);
             return transaction.Id;
         }
 
@@ -44,7 +39,7 @@ namespace Chillgo.BusinessService.Services
 
         public async Task<PackageTransactionDto> GetTransactionById(Guid transactionId)
         {
-            var transaction = await _transactionRepository.GetTransactionByIdAsync(transactionId);
+            var transaction = await _unitOfWork.GetPackageTransactionRepository().GetTransactionByIdAsync(transactionId);
             if (transaction == null) return null;
 
             return new PackageTransactionDto
@@ -63,7 +58,7 @@ namespace Chillgo.BusinessService.Services
 
         public async Task<List<PackageTransactionDto>> GetAllTransactions()
         {
-            var transactions = await _transactionRepository.GetAllTransactionsAsync();
+            var transactions = await _unitOfWork.GetPackageTransactionRepository().GetAllTransactionsAsync();
             return transactions.Select(transaction => new PackageTransactionDto
             {
                 Id = transaction.Id,
