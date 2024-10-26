@@ -196,7 +196,7 @@ namespace Chillgo.BusinessService.Services
             oldAccount.Cccd = updateAccount.Cccd;
             oldAccount.DateOfBirth = updateAccount.DateOfBirth;
             oldAccount.Gender = updateAccount.Gender;
-            oldAccount.LastUpdated = updateAccount.LastUpdated;
+            oldAccount.LastUpdated = DateTime.Now;
             oldAccount.Expertise = updateAccount.Expertise;
             oldAccount.Language = updateAccount.Language;
             oldAccount.CompanyName = updateAccount.CompanyName;
@@ -206,8 +206,6 @@ namespace Chillgo.BusinessService.Services
 
         public async Task<bool> ChangeRoleAccountAsync(BM_Account clientRequest, Guid targetAid)
         {
-            Account targetChangeRole;
-
             CheckValidEmail(clientRequest.Email);
 
             // Find Account of current email access this method
@@ -215,29 +213,40 @@ namespace Chillgo.BusinessService.Services
             acc.Email.ToLower().Equals(clientRequest.Email.ToLower()))
                 ?? throw new NotFoundException("Current Account Access Is Not Exist!");
 
-            targetChangeRole = (currentAccess.Id == targetAid)
-                ? currentAccess : await _unitOfWork.GetAccountRepository().GetByIdAsync(targetAid)
-                ?? throw new NotFoundException("The selected account to change role is not exist!");
-
             // Confirm Owner is doing
             if (!currentAccess.Password.Equals(HashStringSHA256(clientRequest.Password)))
             { throw new BadRequestException("Sai mật khẩu! Xác nhận chủ tài khoản lỗi!"); }
 
-            // If you're not the admin, staff but want to change role to admin, staff
-            if (!currentAccess.Role.ToLower().Equals("admin") || !currentAccess.Role.ToLower().Equals("nhân viên quản lý"))
-            {
-                if (clientRequest.Role.ToLower().Equals("admin") || clientRequest.Role.ToLower().Equals("nhân viên quản lý"))
-                { throw new UnauthorizedException("Bạn không có quyền đổi Role này"); }
-            }
+            //Default target
+            Account targetChangeRole = currentAccess;
 
-            targetChangeRole.Role = clientRequest.Role;
+            if (targetAid != Guid.Empty)
+            {
+                //If specific id target is different
+                if (currentAccess.Id != targetAid)
+                {
+                    targetChangeRole = await _unitOfWork.GetAccountRepository().GetByIdAsync(targetAid)
+                        ?? throw new NotFoundException("The selected account to delete is not exist!");
+                }
+
+                //If non-admin target admin
+                if (!currentAccess.Role.ToLower().Equals("admin") ||
+                    !currentAccess.Role.ToLower().Equals("nhân viên quản lý"))
+                {
+                    if (clientRequest.Role.ToLower().Equals("admin") ||
+                        clientRequest.Role.ToLower().Equals("nhân viên quản lý"))
+                    {
+                        throw new UnauthorizedException("You don't have permission to change role of that Account!");
+                    }
+                }
+
+                targetChangeRole.Role = clientRequest.Role;
+            }
             return await _unitOfWork.GetAccountRepository().SaveChangeAsync();
         }
 
         public async Task<bool> ChangePasswordAccountAsync(BM_Account clientRequest, Guid targetAid, string newPassword)
         {
-            Account targetChangePass;
-
             CheckValidEmail(clientRequest.Email);
 
             // Find Account of current email access this method
@@ -245,21 +254,40 @@ namespace Chillgo.BusinessService.Services
             acc.Email.ToLower().Equals(clientRequest.Email.ToLower()))
                 ?? throw new NotFoundException("Current Account Access Is Not Exist!");
 
-            targetChangePass = (currentAccess.Id == targetAid)
-                ? currentAccess : await _unitOfWork.GetAccountRepository().GetByIdAsync(targetAid)
-                ?? throw new NotFoundException("The selected account to change role is not exist!");
-
             // Confirm Owner is doing
             if (!currentAccess.Password.Equals(HashStringSHA256(clientRequest.Password)))
             { throw new BadRequestException("Sai mật khẩu! Xác nhận chủ tài khoản lỗi!"); }
 
-            targetChangePass.Password = HashStringSHA256(newPassword);
+            //Default target
+            Account targetChangePass = currentAccess;
+
+            if (targetAid != Guid.Empty)
+            {
+                //If specific id target is different
+                if (currentAccess.Id != targetAid)
+                {
+                    targetChangePass = await _unitOfWork.GetAccountRepository().GetByIdAsync(targetAid)
+                        ?? throw new NotFoundException("The selected account to change password is not exist!");
+                }
+
+                //If non-admin target admin
+                if (!currentAccess.Role.ToLower().Equals("admin") ||
+                    !currentAccess.Role.ToLower().Equals("nhân viên quản lý"))
+                {
+                    if (targetChangePass.Role.ToLower().Equals("admin") ||
+                        targetChangePass.Role.ToLower().Equals("nhân viên quản lý"))
+                    {
+                        throw new UnauthorizedException("You don't have permission to change password of that Account!");
+                    }
+                }
+
+                targetChangePass.Password = HashStringSHA256(newPassword);
+            }
             return await _unitOfWork.GetAccountRepository().SaveChangeAsync();
         }
 
         public async Task<bool> DeleteAccountAsync(BM_Account clientRequest, Guid targetAid)
         {
-            Account targetAccount;
             CheckValidEmail(clientRequest.Email);
 
             // Find Account of current email access this method
@@ -267,16 +295,36 @@ namespace Chillgo.BusinessService.Services
             acc.Email.ToLower().Equals(clientRequest.Email.ToLower()))
                 ?? throw new NotFoundException("Current Account Access Is Not Exist!");
 
-            targetAccount = (currentAccess.Id == targetAid)
-                ? currentAccess : await _unitOfWork.GetAccountRepository().GetByIdAsync(targetAid)
-                ?? throw new NotFoundException("The selected account to change role is not exist!");
-
             // Confirm Owner is doing
             if (!currentAccess.Password.Equals(HashStringSHA256(clientRequest.Password)))
             { throw new BadRequestException("Sai mật khẩu! Xác nhận chủ tài khoản lỗi!"); }
 
-            // Delete Soft
-            targetAccount.Status = "Đã Xóa";
+            //Default target
+            Account targetAccount = currentAccess;
+
+            if (targetAid != Guid.Empty)
+            {
+                //If specific id target is different
+                if (currentAccess.Id != targetAid)
+                {
+                    targetAccount = await _unitOfWork.GetAccountRepository().GetByIdAsync(targetAid)
+                        ?? throw new NotFoundException("The selected account to delete is not exist!");
+                }
+
+                //If non-admin target admin
+                if (!currentAccess.Role.ToLower().Equals("admin") ||
+                    !currentAccess.Role.ToLower().Equals("nhân viên quản lý"))
+                {
+                    if (targetAccount.Role.ToLower().Equals("admin") ||
+                        targetAccount.Role.ToLower().Equals("nhân viên quản lý"))
+                    {
+                        throw new UnauthorizedException("You don't have permission to delete of that Account!");
+                    }
+                }
+
+                // Delete Soft
+                targetAccount.Status = "Đã Xóa";
+            }
             var result = await _unitOfWork.GetAccountRepository().SaveChangeAsync();
 
             if (result) await FirebaseAuth.DefaultInstance.DeleteUserAsync(targetAccount.FirebaseUid);
@@ -311,7 +359,7 @@ namespace Chillgo.BusinessService.Services
         private static void BannedChecker(string status)
         {
             if (status.ToLower().Equals("bị cấm"))
-            { throw new BadRequestException("Tài khoản Email này đã bị cấm truy cập vào hệ thống!"); }
+                throw new BadRequestException("Tài khoản Email này đã bị cấm truy cập vào hệ thống!");
         }
 
         private static bool DeletedChecker(string status)
@@ -319,16 +367,8 @@ namespace Chillgo.BusinessService.Services
             return status.ToLower().Equals("đã xóa");
         }
 
-        public Task<string> HandleGoogleAsync(string token, string platform)
-        {
-            throw new NotImplementedException();
-        }
+        public Task<string> HandleGoogleAsync(string token, string platform) { throw new NotImplementedException(); }
 
-
-
-        public Task<bool> BanAccount(Guid accountId)
-        {
-            throw new NotImplementedException();
-        }
+        public Task<bool> BanAccount(Guid accountId) { throw new NotImplementedException(); }
     }
 }
