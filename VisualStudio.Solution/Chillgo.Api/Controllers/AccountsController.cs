@@ -86,6 +86,7 @@ namespace Chillgo.Api.Controllers
                 });
         }
         */
+
         //----------------------------------------------------------------------------
         [Authorize]
         [HttpPatch("updating")]
@@ -105,12 +106,12 @@ namespace Chillgo.Api.Controllers
             return result == true ? Ok("Update Success!") : BadRequest("Update Failed!");
         }
 
-        [HttpPatch("password-recovery")]
-        public async Task<IActionResult> ResetPassword()
-        {
-            //Is doing with Google Cloud Api
-            return Ok();
-        }
+        //[HttpPatch("password-recovery")]
+        //public async Task<IActionResult> ResetPassword()
+        //{
+        //    //Is doing with Google Cloud Api
+        //    return Ok();
+        //}
 
         [Authorize]
         [HttpPatch("new-password")]

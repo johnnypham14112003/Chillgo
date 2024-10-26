@@ -63,9 +63,5 @@ namespace Chillgo.Api.Controllers
             var locations = _serviceFactory.GetLocationService().GetAllLocations();
             return Ok(locations);
         }
-
-
-
-
     }
 }
