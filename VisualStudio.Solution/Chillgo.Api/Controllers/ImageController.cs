@@ -43,7 +43,7 @@ namespace Chillgo.Api.Controllers
         }
 
         [Authorize]
-        [HttpGet("{name}-{typeReference}")]
+        [HttpGet("{name}_{typeReference}")]
         public async Task<IActionResult> GetImageByAccountId([FromRoute]string name, byte typeReference)
         {
             // Gọi FirebaseStorageService để lấy URL của ảnh
