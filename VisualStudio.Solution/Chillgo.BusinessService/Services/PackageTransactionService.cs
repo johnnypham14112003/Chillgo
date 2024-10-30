@@ -77,5 +77,39 @@ namespace Chillgo.BusinessService.Services
                 Status = transaction.Status
             }).ToList();
         }
+
+        public async Task<List<PackageTransactionDto>> GetTransactionsByUserId(Guid userId)
+        {
+            var transactions = await _transactionRepository.GetTransactionsByUserIdAsync(userId);
+            return transactions.Select(transaction => new PackageTransactionDto
+            {
+                Id = transaction.Id,
+                AccountId = transaction.AccountId,
+                PackageId = transaction.PackageId,
+                ChillCoinApplied = transaction.ChillCoinApplied,
+                PayMethod = transaction.PayMethod,
+                TotalPrice = transaction.TotalPrice,
+                StartDate = transaction.StartDate,
+                EndDate = transaction.EndDate,
+                Status = transaction.Status
+            }).ToList();
+        }
+
+        public async Task<List<PackageTransactionDto>> GetTransactionsByUserAndPackage(Guid userId, Guid packageId)
+        {
+            var transactions = await _transactionRepository.GetTransactionsByUserAndPackageAsync(userId, packageId);
+            return transactions.Select(transaction => new PackageTransactionDto
+            {
+                Id = transaction.Id,
+                AccountId = transaction.AccountId,
+                PackageId = transaction.PackageId,
+                ChillCoinApplied = transaction.ChillCoinApplied,
+                PayMethod = transaction.PayMethod,
+                TotalPrice = transaction.TotalPrice,
+                StartDate = transaction.StartDate,
+                EndDate = transaction.EndDate,
+                Status = transaction.Status
+            }).ToList();
+        }
     }
 }
