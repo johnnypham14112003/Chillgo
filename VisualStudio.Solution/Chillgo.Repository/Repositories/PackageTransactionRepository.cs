@@ -35,5 +35,19 @@ namespace Chillgo.Repository.Repositories
         {
             return await _context.PackageTransactions.ToListAsync();
         }
+
+        public async Task<List<PackageTransaction>> GetTransactionsByUserIdAsync(Guid userId)
+        {
+            return await _context.PackageTransactions
+                .Where(t => t.AccountId == userId)
+                .ToListAsync();
+        }
+
+        public async Task<List<PackageTransaction>> GetTransactionsByUserAndPackageAsync(Guid userId, Guid packageId)
+        {
+            return await _context.PackageTransactions
+                .Where(t => t.AccountId == userId && t.PackageId == packageId)
+                .ToListAsync();
+        }
     }
 }
