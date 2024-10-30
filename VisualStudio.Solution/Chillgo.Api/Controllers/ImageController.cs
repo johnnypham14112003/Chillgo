@@ -44,7 +44,7 @@ namespace Chillgo.Api.Controllers
 
         [Authorize]
         [HttpGet("{name}_{typeReference}")]
-        public async Task<IActionResult> GetImageByAccountId([FromRoute]string name, byte typeReference)
+        public async Task<IActionResult> GetImageByAccountId([FromRoute]Guid name, byte typeReference)
         {
             // Gọi FirebaseStorageService để lấy URL của ảnh
             var imageUrl = await _serviceFactory.GetFirebaseStorageService().GetImageUrl(name, typeReference);
@@ -53,7 +53,7 @@ namespace Chillgo.Api.Controllers
 
         [Authorize]
         [HttpDelete("{name}")]
-        public async Task<IActionResult> DeleteImageByAccountId([FromRoute]string name)
+        public async Task<IActionResult> DeleteImageByAccountId([FromRoute]Guid name)
         {
             var result = await _serviceFactory.GetFirebaseStorageService().DeleteImageAsync(name);
             return result ? Ok("Xóa thành công!") : BadRequest("Xóa thất bại!");

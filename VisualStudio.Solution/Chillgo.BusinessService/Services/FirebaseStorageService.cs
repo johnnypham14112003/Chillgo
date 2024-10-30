@@ -48,25 +48,31 @@ namespace Chillgo.BusinessService.Services
                 });
         }
 
-        public async Task<string> UploadFileAsync(Stream fileStream, string fileName, BM_Image ImageData)
+        public async Task<string> UploadFileAsync(Stream fileStream, Guid fileName, BM_Image ImageData)
         {
             if (ImageData.AccountId is null && ImageData.LocationId is null)
                 throw new BadRequestException("Unknown reference object of image! Must enter the Reference Object Id");
+
+            Image? existImage = null;
+            if (ImageData.Type == 1) existImage = await _unitOfWork.GetImageRepository().GetOneAsync(img => img.AccountId == fileName);
+            else if (ImageData.Type == 3) existImage = await _unitOfWork.GetImageRepository().GetOneAsync(img => img.LocationId == fileName);
 
             try
             {
                 var storage = GetFirebaseStorage();
 
+                if (existImage is not null) await DeleteImageAsync(fileName);
                 var fileUrl = await storage
-                    .Child("images")
-                    .Child(fileName)
-                    .PutAsync(fileStream);
+                        .Child("images")
+                        .Child(fileName.ToString())
+                        .PutAsync(fileStream);
 
                 //Save to DB
                 var imageInDb = ImageData.Adapt<Image>();
                 imageInDb.UrlPath = fileUrl;
                 await _unitOfWork.GetImageRepository().AddAsync(imageInDb);
-                var result = await _unitOfWork.GetAccountRepository().SaveChangeAsync();
+
+                await _unitOfWork.GetAccountRepository().SaveChangeAsync();
 
                 return fileUrl;
             }
@@ -76,7 +82,7 @@ namespace Chillgo.BusinessService.Services
             }
         }
 
-        public async Task<string> GetImageUrl(string imageName, byte typeReference)
+        public async Task<string> GetImageUrl(Guid imageName, byte typeReference)
         {
             try
             {
@@ -93,7 +99,7 @@ namespace Chillgo.BusinessService.Services
 
                     string fileUrl = await storage
                         .Child("images")
-                        .Child(imageName)
+                        .Child(imageName.ToString())
                         .GetDownloadUrlAsync();
 
                     // Cập nhật hoặc thêm mới vào database
@@ -104,12 +110,10 @@ namespace Chillgo.BusinessService.Services
                             UrlPath = fileUrl,
                             Type = typeReference
                         };
-                        Guid ReferenceId;
-                        if (Guid.TryParse(imageName, out ReferenceId))
-                        {
-                            if (typeReference == 1) newImage.AccountId = ReferenceId;
-                            else if (typeReference == 3) newImage.LocationId = ReferenceId;
-                        }
+
+                        if (typeReference == 1) newImage.AccountId = imageName;
+                        else if (typeReference == 3) newImage.LocationId = imageName;
+
                         await _unitOfWork.GetImageRepository().AddAsync(newImage);
                         var result = await _unitOfWork.GetAccountRepository().SaveChangeAsync();
                     }
@@ -127,15 +131,14 @@ namespace Chillgo.BusinessService.Services
             }
         }
 
-        public async Task<bool> DeleteImageAsync(string imageName)
+        public async Task<bool> DeleteImageAsync(Guid imageName)
         {
             try
             {
-                var imageInDb = await _unitOfWork.GetImageRepository().GetImageAsync(imageName,0);
+                var imageInDb = await _unitOfWork.GetImageRepository().GetImageAsync(imageName, 0);
                 if (imageInDb is not null)
                 {
                     await _unitOfWork.GetImageRepository().DeleteAsync(imageInDb);
-                    await _unitOfWork.GetAccountRepository().SaveChangeAsync();
                 }
 
                 try
@@ -144,8 +147,10 @@ namespace Chillgo.BusinessService.Services
 
                     await storage
                         .Child("images")
-                        .Child(imageName)
+                        .Child(imageName.ToString())
                         .DeleteAsync();
+
+                    await _unitOfWork.GetAccountRepository().SaveChangeAsync();
                     return true;
                 }
                 catch (FirebaseStorageException ex)

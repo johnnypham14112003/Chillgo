@@ -12,9 +12,9 @@ namespace Chillgo.Repository.Repositories
             _context = context;
         }
 
-        public async Task<Image?> GetImageAsync(string fileName, byte typeReference)
+        public async Task<Image?> GetImageAsync(Guid fileName, byte typeReference)
         {
-            if (string.IsNullOrEmpty(fileName)) return null;
+            if (fileName == Guid.Empty) return null;
             try
             {
                 var query = _context.Images
@@ -22,7 +22,7 @@ namespace Chillgo.Repository.Repositories
                     .AsSplitQuery()
                     .AsQueryable();
 
-                query = query.Where(img => img.UrlPath.ToLower().Contains(fileName.ToLower()));
+                query = query.Where(img => img.UrlPath.ToLower().Contains(fileName.ToString()));
 
                 switch (typeReference)
                 {
