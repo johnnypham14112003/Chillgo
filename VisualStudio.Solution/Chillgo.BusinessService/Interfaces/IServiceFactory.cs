@@ -6,6 +6,7 @@
         ILocationService GetLocationService();
         IConversationService GetConversationService();
         IMessageService GetMessageService();
+        IPackageService GetPackageService();
         IPackageTransactionService GetPackageTransactionService();
         IFirebaseStorageService GetFirebaseStorageService();
     }

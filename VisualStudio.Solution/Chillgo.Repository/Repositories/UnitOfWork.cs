@@ -11,6 +11,7 @@ namespace Chillgo.Repository.Repositories
         private readonly Lazy<ILocationRepository> _locationRepository;
         private readonly Lazy<IConversationRepository> _conversationRepository;
         private readonly Lazy<IMessageRepository> _messageRepository;
+        private readonly Lazy<IPackageRepository> _packageRepository;
         private readonly Lazy<IPackageTransactionRepository> _packageTransactionRepository;
         private readonly Lazy<IImageRepository> _imageRepository;
 
@@ -23,6 +24,7 @@ namespace Chillgo.Repository.Repositories
             _locationRepository = new Lazy<ILocationRepository>(() => new LocationRepository(context));
             _conversationRepository = new Lazy<IConversationRepository>(() => new ConversationRepository(context));
             _messageRepository = new Lazy<IMessageRepository>(() => new MessageRepository(context));
+            _packageRepository = new Lazy<IPackageRepository>(() => new PackageRepository(context));
             _packageTransactionRepository = new Lazy<IPackageTransactionRepository>(() => new PackageTransactionRepository(context));
             _imageRepository = new Lazy<IImageRepository>(() => new ImageRepository(context));
         }
@@ -56,10 +58,18 @@ namespace Chillgo.Repository.Repositories
             return _packageTransactionRepository.Value;
         }
 
+        public IPackageRepository GetPackageRepository()
+        {
+            return _packageRepository.Value;
+        }
+
+        public IPackageTransactionRepository GetPackageTransactionRepository()
+        {
+            return _packageTransactionRepository.Value;
+        }
         public IImageRepository GetImageRepository()
         {
             return _imageRepository.Value;
         }
-
     }
 }

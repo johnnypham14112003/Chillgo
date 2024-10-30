@@ -9,11 +9,19 @@ namespace Chillgo.Api.Controllers
     [ApiController]
     public class PackageTransactionController : ControllerBase
     {
+        //=================================[ Declares ]================================
         private readonly IServiceFactory _serviceFactory;
 
         public PackageTransactionController(IServiceFactory serviceFactory)
         {
             _serviceFactory = serviceFactory;
+        }
+
+        [Authorize(Roles = "Admin, Nhân Viên Quản Lý")]
+        [HttpGet("statistic")]
+        public async Task<IActionResult> StatisticTransaction([FromQuery] string DayTime)
+        {
+            return Ok(await _serviceFactory.GetPackageTransactionService().FinanceStatistics(DayTime));
         }
 
         [Authorize]
@@ -50,6 +58,21 @@ namespace Chillgo.Api.Controllers
         public async Task<IActionResult> GetAllTransactions()
         {
             var transactions = await _serviceFactory.GetPackageTransactionService().GetAllTransactions();
+            return Ok(transactions);
+        }
+
+
+        [HttpGet("by-user/{userId}")]
+        public async Task<IActionResult> GetTransactionsByUserId(Guid userId)
+        {
+            var transactions = await _serviceFactory.GetPackageTransactionService().GetTransactionsByUserId(userId);
+            return Ok(transactions);
+        }
+
+        [HttpGet("by-user-package/{userId}/{packageId}")]
+        public async Task<IActionResult> GetTransactionsByUserAndPackage(Guid userId, Guid packageId)
+        {
+            var transactions = await _serviceFactory.GetPackageTransactionService().GetTransactionsByUserAndPackage(userId, packageId);
             return Ok(transactions);
         }
     }

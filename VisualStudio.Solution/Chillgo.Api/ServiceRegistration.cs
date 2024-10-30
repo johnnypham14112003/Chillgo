@@ -56,9 +56,10 @@ namespace Chillgo.Api
             services.AddScoped<ILocationService, LocationService>();
             services.AddScoped<IConversationService, ConversationService>();
             services.AddScoped<IMessageService, MessageService>();
-            services.AddScoped<IFirebaseStorageService, FirebaseStorageService>();
+            services.AddScoped<IPackageService, PackageService>();
             services.AddScoped<IPackageTransactionService, PackageTransactionService>();
             
+            services.AddScoped<IFirebaseStorageService, FirebaseStorageService>();
             //Add other BusinessServices here...
 
             return services;
@@ -73,9 +74,10 @@ namespace Chillgo.Api
             services.AddScoped<ILocationRepository, LocationRepository>();
             services.AddScoped<IConversationRepository, ConversationRepository>();
             services.AddScoped<IMessageRepository, MessageRepository>();
-            services.AddScoped<IImageRepository, ImageRepository>();
+            services.AddScoped<IPackageRepository, PackageRepository>();
             services.AddScoped<IPackageTransactionRepository, PackageTransactionRepository>();
             
+            services.AddScoped<IImageRepository, ImageRepository>();
             //Add other repository here...
 
             return services;

@@ -4,8 +4,8 @@ namespace Chillgo.BusinessService.Interfaces
 {
     public interface IFirebaseStorageService
     {
-        Task<string> UploadFileAsync(Stream fileStream, string fileName, BM_Image imageData);
-        Task<string> GetImageUrl(string imageName, byte typeReference);
-        Task<bool> DeleteImageAsync(string fileName);
+        Task<string> UploadFileAsync(Stream fileStream, Guid fileName, BM_Image imageData);
+        Task<string> GetImageUrl(Guid imageName, byte typeReference);
+        Task<bool> DeleteImageAsync(Guid fileName);
     }
 }
