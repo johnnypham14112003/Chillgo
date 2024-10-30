@@ -1,19 +1,14 @@
 ﻿using Chillgo.Repository.Interfaces;
 using Chillgo.Repository.Models;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Chillgo.Repository.Repositories
 {
-    public class PackageTransactionRepository : IPackageTransactionRepository
+    public class PackageTransactionRepository : GenericRepository<PackageTransaction>, IPackageTransactionRepository
     {
         private readonly ChillgoDbContext _context;
 
-        public PackageTransactionRepository(ChillgoDbContext context)
+        public PackageTransactionRepository(ChillgoDbContext context) : base(context)
         {
             _context = context;
         }

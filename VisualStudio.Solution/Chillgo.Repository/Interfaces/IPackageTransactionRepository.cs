@@ -1,13 +1,8 @@
 ﻿using Chillgo.Repository.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Chillgo.Repository.Interfaces
 {
-    public interface IPackageTransactionRepository
+    public interface IPackageTransactionRepository : IGenericRepository<PackageTransaction>
     {
         Task AddTransactionAsync(PackageTransaction transaction);
         Task<PackageTransaction> GetTransactionByIdAsync(Guid transactionId);

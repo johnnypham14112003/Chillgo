@@ -24,6 +24,10 @@ namespace Chillgo.Repository.Repositories
         {
             return await _context.Set<T>().CountAsync(expression);
         }
+        public async Task<decimal> SumAsync(Expression<Func<T, decimal>> expression)
+        {
+            return await _context.Set<T>().SumAsync(expression);
+        }
         public async Task<List<T>> GetListAsync(Expression<Func<T, bool>> expression)
         {
             return await _context.Set<T>().Where(expression).ToListAsync();

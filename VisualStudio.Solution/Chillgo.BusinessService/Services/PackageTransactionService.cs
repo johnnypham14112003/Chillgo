@@ -1,22 +1,63 @@
-﻿using Chillgo.BusinessService.Interfaces;
+﻿using Chillgo.BusinessService.BusinessModels;
+using Chillgo.BusinessService.Interfaces;
 using Chillgo.BusinessService.SharedDTOs;
 using Chillgo.Repository.Interfaces;
 using Chillgo.Repository.Models;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Chillgo.BusinessService.Services
 {
     public class PackageTransactionService : IPackageTransactionService
     {
-        private readonly IPackageTransactionRepository _transactionRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public PackageTransactionService(IPackageTransactionRepository transactionRepository)
+        public PackageTransactionService(IUnitOfWork unitOfWork)
         {
-            _transactionRepository = transactionRepository;
+            _unitOfWork = unitOfWork;
+        }
+
+        public async Task<BM_FinanceStatistics> FinanceStatistics(string DayTime)
+        {
+            DateTime today = DateTime.Today;
+            DateTime yesterday = today.AddDays(-1);
+            DateTime startOfMonth = new DateTime(today.Year, today.Month, 1);
+
+            // Tổng số lượng các PackageTransaction
+            int totalPackagesSold = await _unitOfWork.GetPackageTransactionRepository().CountAsync(pack => true);
+
+            // Tổng số lượng và doanh thu theo từng trường hợp thời gian
+            int totalPackagesSoldByDay;
+            decimal totalRevenueByDay;
+
+            if (DayTime.ToLower() == "today")
+            {
+                totalPackagesSoldByDay = await _unitOfWork.GetPackageTransactionRepository().CountAsync(pack => pack.PaidAt >= today);
+                totalRevenueByDay = await _unitOfWork.GetPackageTransactionRepository().SumAsync(pack => pack.PaidAt >= today ? pack.TotalPrice : 0);
+            }
+            else if (DayTime.ToLower() == "yesterday")
+            {
+                totalPackagesSoldByDay = await _unitOfWork.GetPackageTransactionRepository().CountAsync(pack => pack.PaidAt >= yesterday && pack.PaidAt < today);
+                totalRevenueByDay = await _unitOfWork.GetPackageTransactionRepository().SumAsync(pack => (pack.PaidAt >= yesterday && pack.PaidAt < today) ? pack.TotalPrice : 0);
+            }
+            else if (DayTime.ToLower() == "month")
+            {
+                totalPackagesSoldByDay = await _unitOfWork.GetPackageTransactionRepository().CountAsync(pack => pack.PaidAt >= startOfMonth);
+                totalRevenueByDay = await _unitOfWork.GetPackageTransactionRepository().SumAsync(pack => pack.PaidAt >= startOfMonth ? pack.TotalPrice : 0);
+            }
+            else
+            {
+                throw new ArgumentException("Invalid DayTime parameter");
+            }
+
+            return new BM_FinanceStatistics
+            {
+                TotalPackagesSold = totalPackagesSold,
+                TotalPackagesSoldByDay = totalPackagesSoldByDay,
+                Commission = 0,
+                RevenueCash = totalRevenueByDay,
+                RevenueByDay = totalRevenueByDay,
+                DayTime = DayTime
+            };
         }
 
         public async Task<Guid> CreateTransaction(CreatePackageTransactionDto transactionDto)
@@ -36,7 +77,7 @@ namespace Chillgo.BusinessService.Services
                 Status = transactionDto.Status
             };
 
-            await _transactionRepository.AddTransactionAsync(transaction);
+            await _unitOfWork.GetPackageTransactionRepository().AddTransactionAsync(transaction);
             return transaction.Id;
         }
 
@@ -44,7 +85,7 @@ namespace Chillgo.BusinessService.Services
 
         public async Task<PackageTransactionDto> GetTransactionById(Guid transactionId)
         {
-            var transaction = await _transactionRepository.GetTransactionByIdAsync(transactionId);
+            var transaction = await _unitOfWork.GetPackageTransactionRepository().GetTransactionByIdAsync(transactionId);
             if (transaction == null) return null;
 
             return new PackageTransactionDto
@@ -63,7 +104,7 @@ namespace Chillgo.BusinessService.Services
 
         public async Task<List<PackageTransactionDto>> GetAllTransactions()
         {
-            var transactions = await _transactionRepository.GetAllTransactionsAsync();
+            var transactions = await _unitOfWork.GetPackageTransactionRepository().GetAllTransactionsAsync();
             return transactions.Select(transaction => new PackageTransactionDto
             {
                 Id = transaction.Id,
@@ -80,7 +121,7 @@ namespace Chillgo.BusinessService.Services
 
         public async Task<List<PackageTransactionDto>> GetTransactionsByUserId(Guid userId)
         {
-            var transactions = await _transactionRepository.GetTransactionsByUserIdAsync(userId);
+            var transactions = await _unitOfWork.GetPackageTransactionRepository().GetTransactionsByUserIdAsync(userId);
             return transactions.Select(transaction => new PackageTransactionDto
             {
                 Id = transaction.Id,
@@ -97,7 +138,7 @@ namespace Chillgo.BusinessService.Services
 
         public async Task<List<PackageTransactionDto>> GetTransactionsByUserAndPackage(Guid userId, Guid packageId)
         {
-            var transactions = await _transactionRepository.GetTransactionsByUserAndPackageAsync(userId, packageId);
+            var transactions = await _unitOfWork.GetPackageTransactionRepository().GetTransactionsByUserAndPackageAsync(userId, packageId);
             return transactions.Select(transaction => new PackageTransactionDto
             {
                 Id = transaction.Id,

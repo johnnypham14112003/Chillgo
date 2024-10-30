@@ -8,6 +8,7 @@ namespace Chillgo.Repository.Interfaces
         Task<bool> AnyAsync(Expression<Func<T, bool>> expression);
 
         Task<int> CountAsync(Expression<Func<T, bool>> expression);
+        Task<decimal> SumAsync(Expression<Func<T, decimal>> expression);
 
         Task<List<T>> GetListAsync(Expression<Func<T, bool>> expression);
 

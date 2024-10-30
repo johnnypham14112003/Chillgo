@@ -8,6 +8,8 @@
         ILocationRepository GetLocationRepository();
         IConversationRepository GetConversationRepository();
         IMessageRepository GetMessageRepository();
+        IPackageRepository GetPackageRepository();
+        IPackageTransactionRepository GetPackageTransactionRepository();
         IImageRepository GetImageRepository();
     }
 }
