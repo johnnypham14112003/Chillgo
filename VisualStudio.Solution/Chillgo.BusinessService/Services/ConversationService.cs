@@ -4,11 +4,6 @@ using Chillgo.BusinessService.SharedDTOs;
 using Chillgo.Repository.Interfaces;
 using Chillgo.Repository.Models;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Chillgo.BusinessService.Services
 {
@@ -25,13 +20,13 @@ namespace Chillgo.BusinessService.Services
 
         public async Task<List<ConversationDto>> GetAllConversationsAsync()
         {
-            var conversations = await _unitOfWork.ConversationRepository.GetListAsync(c => true);
+            var conversations = await _unitOfWork.GetConversationRepository().GetListAsync(c => true);
             return _mapper.Map<List<ConversationDto>>(conversations);
         }
 
         public async Task<ConversationDto> GetConversationByIdAsync(Guid conversationId)
         {
-            var conversation = await _unitOfWork.ConversationRepository.GetByIdAsync(conversationId);
+            var conversation = await _unitOfWork.GetConversationRepository().GetByIdAsync(conversationId);
             if (conversation == null)
             {
                 throw new KeyNotFoundException("Conversation not found");
@@ -41,7 +36,7 @@ namespace Chillgo.BusinessService.Services
 
         public async Task<List<ConversationDto>> GetConversationsByAccountIdAsync(Guid accountId)
         {
-            var conversations = await _unitOfWork.ConversationRepository
+            var conversations = await _unitOfWork.GetConversationRepository()
                 .GetListAsync(c => c.FirstAccountId == accountId || c.SecondAccountId == accountId);
 
             return _mapper.Map<List<ConversationDto>>(conversations);
@@ -49,7 +44,7 @@ namespace Chillgo.BusinessService.Services
 
         public async Task<PaginatedMessagesDto> GetMessagesByConversationIdAsync(Guid conversationId, int page, int pageSize, string orderBy, string orderDirection)
         {
-            var query = _unitOfWork.MessageRepository
+            var query = _unitOfWork.GetMessageRepository()
                 .Entities
                 .Where(m => m.ConversationId == conversationId);
 
@@ -111,7 +106,7 @@ namespace Chillgo.BusinessService.Services
                 conversation.IsHuman = true;  // Cuộc trò chuyện giữa người với người
             }
 
-            await _unitOfWork.ConversationRepository.AddAsync(conversation);
+            await _unitOfWork.GetConversationRepository().AddAsync(conversation);
             await _unitOfWork.SaveChangesAsync();
 
             return conversation;
@@ -119,21 +114,21 @@ namespace Chillgo.BusinessService.Services
 
         public async Task DeleteConversationByIdAsync(Guid conversationId)
         {
-            var conversation = await _unitOfWork.ConversationRepository.GetByIdAsync(conversationId);
+            var conversation = await _unitOfWork.GetConversationRepository().GetByIdAsync(conversationId);
             if (conversation == null)
             {
                 throw new KeyNotFoundException("Conversation không tìm thấy");
             }
 
             // Retrieve and delete all related messages
-            var messages = await _unitOfWork.MessageRepository.GetListAsync(m => m.ConversationId == conversationId);
+            var messages = await _unitOfWork.GetMessageRepository().GetListAsync(m => m.ConversationId == conversationId);
             if (messages.Any())
             {
-                await _unitOfWork.MessageRepository.DeleteRangeAsync(messages);
+                await _unitOfWork.GetMessageRepository().DeleteRangeAsync(messages);
             }
 
             // Delete the conversation itself
-            await _unitOfWork.ConversationRepository.DeleteAsync(conversation);
+            await _unitOfWork.GetConversationRepository().DeleteAsync(conversation);
             await _unitOfWork.SaveChangesAsync();
         }
     }

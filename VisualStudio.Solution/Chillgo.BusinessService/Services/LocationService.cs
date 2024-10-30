@@ -1,46 +1,40 @@
 ﻿using Chillgo.BusinessService.Interfaces;
 using Chillgo.Repository.Interfaces;
 using Chillgo.Repository.Models;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Chillgo.BusinessService.Services
 {
     public class LocationService : ILocationService
     {
-        private readonly ILocationRepository _locationRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public LocationService(ILocationRepository locationRepository)
+        public LocationService(IUnitOfWork unitOfWork)
         {
-            _locationRepository = locationRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public List<Location> GetTop5Locations()
         {
-            return _locationRepository.GetTop5Locations();
+            return _unitOfWork.GetLocationRepository().GetTop5Locations();
         }
-            public List<Location> GetRandom5Locations()
+        public List<Location> GetRandom5Locations()
         {
-            return _locationRepository.GetRandom5Locations();
+            return _unitOfWork.GetLocationRepository().GetRandom5Locations();
         }
 
         public List<Location> GetSortedLocations(string sortColumn, int page, int pageSize)
         {
-            return _locationRepository.GetSortedLocations(sortColumn, page, pageSize);
+            return _unitOfWork.GetLocationRepository().GetSortedLocations(sortColumn, page, pageSize);
         }
 
         public Location GetLocationById(Guid id)
         {
-            return _locationRepository.GetLocationById(id);
+            return _unitOfWork.GetLocationRepository().GetLocationById(id);
         }
 
         public List<Location> GetAllLocations()
         {
-            return _locationRepository.GetAllLocations();
+            return _unitOfWork.GetLocationRepository().GetAllLocations();
         }
 
 

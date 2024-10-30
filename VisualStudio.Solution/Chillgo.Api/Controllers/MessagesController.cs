@@ -1,6 +1,7 @@
 ﻿using Chillgo.Api.Models.Request;
 using Chillgo.BusinessService.Interfaces;
 using Chillgo.Repository.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Chillgo.Api.Controllers
@@ -9,13 +10,13 @@ namespace Chillgo.Api.Controllers
     [Route("api/[controller]")]
     public class MessagesController : ControllerBase
     {
-        private readonly IMessageService _messageService;
-
-        public MessagesController(IMessageService messageService)
+        private readonly IServiceFactory _serviceFactory;
+        public MessagesController(IServiceFactory serviceFactory)
         {
-            _messageService = messageService;
+            _serviceFactory = serviceFactory;
         }
 
+        [Authorize]
         [HttpPost("create")]
         public async Task<IActionResult> CreateMessage([FromBody] CreateMessageRequest request)
         {
@@ -33,10 +34,11 @@ namespace Chillgo.Api.Controllers
                 Status = "Đã Gửi"
             };
 
-            var createdMessage = await _messageService.CreateMessageAsync(message);
+            var createdMessage = await _serviceFactory.GetMessageService().CreateMessageAsync(message);
             return Ok(createdMessage);
         }
 
+        [Authorize]
         [HttpPut("update-status")]
         public async Task<IActionResult> UpdateMessageStatus(Guid messageId, [FromBody] string status)
         {
@@ -47,7 +49,7 @@ namespace Chillgo.Api.Controllers
 
             try
             {
-                var updatedMessage = await _messageService.UpdateMessageStatusAsync(messageId, status);
+                var updatedMessage = await _serviceFactory.GetMessageService().UpdateMessageStatusAsync(messageId, status);
                 return Ok(updatedMessage);
             }
             catch (KeyNotFoundException)
@@ -56,6 +58,7 @@ namespace Chillgo.Api.Controllers
             }
         }
 
+        [Authorize]
         [HttpDelete("{messageId}")]
         public async Task<IActionResult> DeleteMessageById(Guid messageId)
         {
@@ -66,7 +69,7 @@ namespace Chillgo.Api.Controllers
 
             try
             {
-                await _messageService.DeleteMessageByIdAsync(messageId);
+                await _serviceFactory.GetMessageService().DeleteMessageByIdAsync(messageId);
                 return NoContent(); // 204 No Content on successful deletion
             }
             catch (KeyNotFoundException)
