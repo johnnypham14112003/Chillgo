@@ -25,7 +25,7 @@ namespace Chillgo.BusinessService.Services
                 (queryCondition.KeyWord, queryCondition.Price, queryCondition.Duration, queryCondition.Status,
                 queryCondition.PageIndex, queryCondition.PageSize, queryCondition.NameDescendingOrder);
 
-            if (totalCount == 0) { throw new NotFoundException("Not found any account"); }
+            if (totalCount == 0) { throw new NotFoundException("Not found any package"); }
 
             // Convert to return data type
             var mappedResult = result.Adapt<List<BM_PackageInfo>>();
