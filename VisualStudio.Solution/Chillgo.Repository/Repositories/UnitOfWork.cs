@@ -53,10 +53,6 @@ namespace Chillgo.Repository.Repositories
         {
             return _messageRepository.Value;
         }
-        public IPackageTransactionRepository GetPackageTransactionRepository()
-        {
-            return _packageTransactionRepository.Value;
-        }
 
         public IPackageRepository GetPackageRepository()
         {
