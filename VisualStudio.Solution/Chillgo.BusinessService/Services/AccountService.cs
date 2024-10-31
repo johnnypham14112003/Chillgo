@@ -52,18 +52,11 @@ namespace Chillgo.BusinessService.Services
 
         public async Task<BM_PagingResults<BM_AccountBaseInfo>> GetAccountsListAsync(BM_AccountQuery queryCondition)
         {
-            //Reset invalid number
-            queryCondition.PageIndex = (queryCondition.PageIndex <= 0) ? 1 : queryCondition.PageIndex;
-            queryCondition.PageSize = (queryCondition.PageSize <= 0) ? 10 : queryCondition.PageSize;
-
             var (result, totalCount) = await _unitOfWork.GetAccountRepository().GetAccountsListAsync
                 (queryCondition.KeyWord,
                 queryCondition.Gender,
                 queryCondition.Role,
-                queryCondition.Status,
-                queryCondition.PageIndex,
-                queryCondition.PageSize,
-                queryCondition.NameDescendingOrder);
+                queryCondition.Status);
 
             if (totalCount == 0) { throw new NotFoundException("Not found any account"); }
 
@@ -72,8 +65,6 @@ namespace Chillgo.BusinessService.Services
 
             return new BM_PagingResults<BM_AccountBaseInfo>
             {
-                PageSize = queryCondition.PageSize,
-                CurrentPage = queryCondition.PageIndex,
                 TotalCount = totalCount,
                 DataList = mappedResult
             };
