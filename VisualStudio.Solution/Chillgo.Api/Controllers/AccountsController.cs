@@ -23,7 +23,7 @@ namespace Chillgo.Api.Controllers
         //=================================[ Endpoints ]================================
         [Authorize(Roles = "Admin, Nhân Viên Quản Lý")]
         [HttpGet("statistical")]
-        public async Task<IActionResult> TestConnect()
+        public async Task<IActionResult> GetAccountsStatistic()
         {
             return Ok(await _serviceFactory.GetAccountService().TotalAccount());
         }
