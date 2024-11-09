@@ -14,7 +14,7 @@ namespace Chillgo.Repository.Repositories
         }
 
         public async Task<(List<Package>? result, int totalCount)> GetPackagesListAsync
-            (string? keyword, decimal? price, short? duration, string? status, int pageIndex, int pageSize, bool nameDescendingOrder)
+            (string? keyword, decimal? price, short? duration, string? status)
         {
             try
             {
@@ -49,16 +49,17 @@ namespace Chillgo.Repository.Repositories
                 }
 
                 // Sort by Name
-                query = nameDescendingOrder == true ?
-                    query.OrderByDescending(pack => pack.Name) : query.OrderBy(pack => pack.Name);
+                query = query.OrderByDescending(pack => pack.Name);
 
                 int count = query.Count();
 
                 // Apply paging
-                var pagedPackages = await query
-                    .Skip((pageIndex - 1) * pageSize)
-                    .Take(pageSize)
-                    .ToListAsync();
+                //var pagedPackages = await query
+                //    .Skip((pageIndex - 1) * pageSize)
+                //    .Take(pageSize)
+                //    .ToListAsync();
+
+                var pagedPackages = await query.ToListAsync();
 
                 return (pagedPackages, count);
             }

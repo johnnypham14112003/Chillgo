@@ -30,7 +30,6 @@ namespace Chillgo.BusinessService.Services
             {
                 SumAccount = await _unitOfWork.GetAccountRepository().SummaryTotalAccount("", false),
                 SumCustomer = await _unitOfWork.GetAccountRepository().SummaryTotalAccount("Người Dùng", true),
-                SumTourGuide = await _unitOfWork.GetAccountRepository().SummaryTotalAccount("Hướng Dẫn Viên", true),
                 SumPartner = await _unitOfWork.GetAccountRepository().SummaryTotalAccount("Đối Tác", true),
                 SumStaff = await _unitOfWork.GetAccountRepository().SummaryTotalAccount("Nhân Viên Quản Lý", true),
                 SumDeleted = await _unitOfWork.GetAccountRepository().SummaryTotalAccount("Đã Xóa", false)
@@ -52,18 +51,11 @@ namespace Chillgo.BusinessService.Services
 
         public async Task<BM_PagingResults<BM_AccountBaseInfo>> GetAccountsListAsync(BM_AccountQuery queryCondition)
         {
-            //Reset invalid number
-            queryCondition.PageIndex = (queryCondition.PageIndex <= 0) ? 1 : queryCondition.PageIndex;
-            queryCondition.PageSize = (queryCondition.PageSize <= 0) ? 10 : queryCondition.PageSize;
-
             var (result, totalCount) = await _unitOfWork.GetAccountRepository().GetAccountsListAsync
                 (queryCondition.KeyWord,
                 queryCondition.Gender,
                 queryCondition.Role,
-                queryCondition.Status,
-                queryCondition.PageIndex,
-                queryCondition.PageSize,
-                queryCondition.NameDescendingOrder);
+                queryCondition.Status);
 
             if (totalCount == 0) { throw new NotFoundException("Not found any account"); }
 
@@ -72,8 +64,6 @@ namespace Chillgo.BusinessService.Services
 
             return new BM_PagingResults<BM_AccountBaseInfo>
             {
-                PageSize = queryCondition.PageSize,
-                CurrentPage = queryCondition.PageIndex,
                 TotalCount = totalCount,
                 DataList = mappedResult
             };

@@ -3,11 +3,11 @@ using Chillgo.Repository.Models;
 
 namespace Chillgo.Repository.Repositories
 {
-    public class LocationRepository : ILocationRepository
+    public class LocationRepository : GenericRepository<Location>,ILocationRepository
     {
         private readonly ChillgoDbContext _dbContext;
 
-        public LocationRepository(ChillgoDbContext dbContext)
+        public LocationRepository(ChillgoDbContext dbContext): base(dbContext)
         {
             _dbContext = dbContext;
         }
