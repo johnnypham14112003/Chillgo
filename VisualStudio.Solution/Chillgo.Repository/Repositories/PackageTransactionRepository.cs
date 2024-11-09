@@ -19,8 +19,6 @@ namespace Chillgo.Repository.Repositories
             await _context.SaveChangesAsync();
         }
 
-        //
-
         public async Task<PackageTransaction> GetTransactionByIdAsync(Guid transactionId)
         {
             return await _context.PackageTransactions.FirstOrDefaultAsync(t => t.Id == transactionId);

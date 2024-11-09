@@ -26,7 +26,7 @@ namespace Chillgo.Repository.Repositories
             try
             {
                 //If null => All account
-                if (whichType.ToLower().IsNullOrEmpty()) { return await _context.Accounts.AsNoTracking().CountAsync(); }
+                if (string.IsNullOrEmpty(whichType)) { return await _context.Accounts.AsNoTracking().CountAsync(); }
 
                 // Count by Role
                 if (byRole) { return await _context.Accounts.AsNoTracking().CountAsync(a => a.Role.ToLower().Equals(whichType.ToLower())); }

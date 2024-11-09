@@ -30,7 +30,6 @@ namespace Chillgo.BusinessService.Services
             {
                 SumAccount = await _unitOfWork.GetAccountRepository().SummaryTotalAccount("", false),
                 SumCustomer = await _unitOfWork.GetAccountRepository().SummaryTotalAccount("Người Dùng", true),
-                SumTourGuide = await _unitOfWork.GetAccountRepository().SummaryTotalAccount("Hướng Dẫn Viên", true),
                 SumPartner = await _unitOfWork.GetAccountRepository().SummaryTotalAccount("Đối Tác", true),
                 SumStaff = await _unitOfWork.GetAccountRepository().SummaryTotalAccount("Nhân Viên Quản Lý", true),
                 SumDeleted = await _unitOfWork.GetAccountRepository().SummaryTotalAccount("Đã Xóa", false)

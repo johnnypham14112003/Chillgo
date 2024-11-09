@@ -28,12 +28,12 @@ namespace Chillgo.Repository.Repositories
                 {
                     case 1: //'Account'
                         query = query.Where(img =>
-                            img.AccountId.HasValue && img.AccountId.ToString().Equals(fileName));
+                            img.AccountId.HasValue && img.AccountId == fileName);
                         break;
 
                     case 3: // 'Location'
                         query = query.Where(img =>
-                            img.LocationId.HasValue && img.LocationId.ToString().Equals(fileName));
+                            img.LocationId.HasValue && img.LocationId == fileName);
                         break;
 
                     default:

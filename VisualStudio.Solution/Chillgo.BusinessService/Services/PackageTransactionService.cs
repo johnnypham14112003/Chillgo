@@ -1,4 +1,5 @@
 ﻿using Chillgo.BusinessService.BusinessModels;
+using Chillgo.BusinessService.Extensions.Exceptions;
 using Chillgo.BusinessService.Interfaces;
 using Chillgo.BusinessService.SharedDTOs;
 using Chillgo.Repository.Interfaces;
@@ -16,48 +17,69 @@ namespace Chillgo.BusinessService.Services
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<BM_FinanceStatistics> FinanceStatistics(string DayTime)
+        public async Task<BM_FinanceStatistics> FinanceStatistics(DateTime date, int month, int year, bool byDaily)
         {
-            DateTime today = DateTime.Today;
-            DateTime yesterday = today.AddDays(-1);
-            DateTime startOfMonth = new DateTime(today.Year, today.Month, 1);
+            if (byDaily)
+            {
+                try
+                {
+                    // Lấy tất cả giao dịch trong ngày
+                    var transactions = await _unitOfWork.GetPackageTransactionRepository().GetListAsync(t =>
+                        t.PaidAt.Date == date.Date);
 
-            // Tổng số lượng các PackageTransaction
-            int totalPackagesSold = await _unitOfWork.GetPackageTransactionRepository().CountAsync(pack => true);
+                    if (transactions.Count == 0)
+                        throw new NotFoundException($"Không tìm thấy giao dịch nào trong ngày {date.ToString("dd/MM/yyyy")}");
 
-            // Tổng số lượng và doanh thu theo từng trường hợp thời gian
-            int totalPackagesSoldByDay;
-            decimal totalRevenueByDay;
+                    // Tính toán thống kê
+                    return new BM_FinanceStatistics
+                    {
+                        TotalTransactions = transactions.Count,
+                        TotalAmount = transactions.Sum(t => t.TotalPrice),
+                        PaymentMethodStats = transactions
+                            .GroupBy(t => t.PayMethod)
+                            .ToDictionary(
+                                g => g.Key,
+                                g => g.Count()
+                            )
+                    };
+                }
+                catch (Exception ex)
+                {
+                    throw new BadRequestException($"Lỗi khi lấy thống kê theo ngày: {ex.Message}");
+                }
+            }//End if daily
 
-            if (DayTime.ToLower() == "today")
+            try
             {
-                totalPackagesSoldByDay = await _unitOfWork.GetPackageTransactionRepository().CountAsync(pack => pack.PaidAt >= today);
-                totalRevenueByDay = await _unitOfWork.GetPackageTransactionRepository().SumAsync(pack => pack.PaidAt >= today ? pack.TotalPrice : 0);
-            }
-            else if (DayTime.ToLower() == "yesterday")
-            {
-                totalPackagesSoldByDay = await _unitOfWork.GetPackageTransactionRepository().CountAsync(pack => pack.PaidAt >= yesterday && pack.PaidAt < today);
-                totalRevenueByDay = await _unitOfWork.GetPackageTransactionRepository().SumAsync(pack => (pack.PaidAt >= yesterday && pack.PaidAt < today) ? pack.TotalPrice : 0);
-            }
-            else if (DayTime.ToLower() == "month")
-            {
-                totalPackagesSoldByDay = await _unitOfWork.GetPackageTransactionRepository().CountAsync(pack => pack.PaidAt >= startOfMonth);
-                totalRevenueByDay = await _unitOfWork.GetPackageTransactionRepository().SumAsync(pack => pack.PaidAt >= startOfMonth ? pack.TotalPrice : 0);
-            }
-            else
-            {
-                throw new ArgumentException("Invalid DayTime parameter");
-            }
+                // Get first and last day of month
+                var startDate = new DateTime(year, month, 1);
+                var endDate = startDate.AddMonths(1).AddDays(-1);
 
-            return new BM_FinanceStatistics
+                // Get transaction in month
+                var transactions = await _unitOfWork.GetPackageTransactionRepository().GetListAsync(t =>
+                    t.PaidAt >= startDate &&
+                    t.PaidAt <= endDate);
+
+                if (transactions.Count == 0)
+                    throw new NotFoundException($"Không tìm thấy giao dịch nào trong tháng {month}/{year}");
+
+                // Tính toán thống kê
+                return new BM_FinanceStatistics
+                {
+                    TotalTransactions = transactions.Count,
+                    TotalAmount = transactions.Sum(t => t.TotalPrice),
+                    PaymentMethodStats = transactions
+                        .GroupBy(t => t.PayMethod)
+                        .ToDictionary(
+                            g => g.Key,
+                            g => g.Count()
+                        )
+                };
+            }
+            catch (Exception ex)
             {
-                TotalPackagesSold = totalPackagesSold,
-                TotalPackagesSoldByDay = totalPackagesSoldByDay,
-                Commission = 0,
-                RevenueCash = totalRevenueByDay,
-                RevenueByDay = totalRevenueByDay,
-                DayTime = DayTime
-            };
+                throw new BadRequestException($"Lỗi khi lấy thống kê theo tháng: {ex.Message}");
+            }
         }
 
         public async Task<Guid> CreateTransaction(CreatePackageTransactionDto transactionDto)
