@@ -5,7 +5,7 @@ namespace Chillgo.BusinessService.Interfaces
 {
     public interface IPackageTransactionService
     {
-        Task<BM_FinanceStatistics> FinanceStatistics(string DayTime);
+        Task<BM_FinanceStatistics> FinanceStatistics(DateTime date, int month, int year, bool byDaily);
         Task<Guid> CreateTransaction(CreatePackageTransactionDto transactionDto);
         Task<PackageTransactionDto> GetTransactionById(Guid transactionId);
         Task<List<PackageTransactionDto>> GetAllTransactions();

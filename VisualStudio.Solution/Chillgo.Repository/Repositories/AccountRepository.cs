@@ -26,7 +26,7 @@ namespace Chillgo.Repository.Repositories
             try
             {
                 //If null => All account
-                if (whichType.ToLower().IsNullOrEmpty()) { return await _context.Accounts.AsNoTracking().CountAsync(); }
+                if (string.IsNullOrEmpty(whichType)) { return await _context.Accounts.AsNoTracking().CountAsync(); }
 
                 // Count by Role
                 if (byRole) { return await _context.Accounts.AsNoTracking().CountAsync(a => a.Role.ToLower().Equals(whichType.ToLower())); }
@@ -40,7 +40,7 @@ namespace Chillgo.Repository.Repositories
             }
         }
         public async Task<(List<Account>? result, int totalCount)> GetAccountsListAsync
-            (string? keyword, string? gender, string? role, string? status, int pageIndex, int pageSize, bool nameDescendingOrder)
+            (string? keyword, string? gender, string? role, string? status)
         {
             try
             {
@@ -75,16 +75,12 @@ namespace Chillgo.Repository.Repositories
                 }
 
                 // Sort by Name
-                query = nameDescendingOrder == true ?
-                    query.OrderByDescending(acc => acc.FullName) : query.OrderBy(acc => acc.FullName);
+                query = query.OrderByDescending(acc => acc.FullName);
 
                 int count = query.Count();
 
                 // Apply paging
-                var pagedAccounts = await query
-                    .Skip((pageIndex - 1) * pageSize)
-                    .Take(pageSize)
-                    .ToListAsync();
+                var pagedAccounts = await query.ToListAsync();
 
                 return (pagedAccounts, count);
             }
