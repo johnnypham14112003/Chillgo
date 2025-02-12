@@ -4,7 +4,6 @@ using Chillgo.BusinessService.Interfaces;
 using Chillgo.BusinessService.SharedDTOs;
 using Chillgo.Repository.Interfaces;
 using Chillgo.Repository.Models;
-using System;
 
 namespace Chillgo.BusinessService.Services
 {
@@ -38,7 +37,7 @@ namespace Chillgo.BusinessService.Services
                         PaymentMethodStats = transactions
                             .GroupBy(t => t.PayMethod)
                             .ToDictionary(
-                                g => g.Key,
+                                g => TranslatePayMethod(g.Key),
                                 g => g.Count()
                             )
                     };
@@ -71,7 +70,7 @@ namespace Chillgo.BusinessService.Services
                     PaymentMethodStats = transactions
                         .GroupBy(t => t.PayMethod)
                         .ToDictionary(
-                            g => g.Key,
+                            g => TranslatePayMethod(g.Key),
                             g => g.Count()
                         )
                 };
@@ -80,6 +79,17 @@ namespace Chillgo.BusinessService.Services
             {
                 throw new BadRequestException($"Lỗi khi lấy thống kê theo tháng: {ex.Message}");
             }
+        }
+
+        private string TranslatePayMethod(string payMethod)
+        {
+            return payMethod switch
+            {
+                "Chuyển Khoản" => "transfer",
+                "Tiền Mặt" => "cash",
+                "Thẻ" => "card",
+                _ => payMethod // Nếu không có trong danh sách trên, giữ nguyên
+            };
         }
 
         public async Task<Guid> CreateTransaction(CreatePackageTransactionDto transactionDto)
